@@ -1,6 +1,6 @@
 # MYELIN - AI Governance and Alignment Auditor
 
-![MYELIN Architecture](architecture_diagram.png)
+
 
 ## 🎯 Overview
 
