@@ -4,28 +4,29 @@
 
 ## 🎯 Overview
 
-**MYELIN** is a comprehensive AI governance middleware that audits AI-generated content across four critical pillars:
+**MYELIN** is a comprehensive AI governance middleware that audits AI-generated content across five critical pillars:
 
-1. **🔍 Fairness** - Detects bias in ML model predictions
-2. **✓ Factual Check (FCAM)** - Validates factual consistency and detects hallucinations
-3. **⚠️ Toxicity** - Identifies toxic, harmful, and unsafe content
-4. **🛡️ Governance** - Ensures compliance with organizational policies
+1. **🔍 Fairness** - Ensures equitable outcomes in ML predictions
+2. **⚖️ Bias** - Detects gender, racial, religious, and socioeconomic biases
+3. **✓ Factual Check (FCAM)** - Validates factual consistency and detects hallucinations
+4. **⚠️ Toxicity** - Identifies toxic, harmful, and unsafe content
+5. **🛡️ Governance** - Ensures compliance with organizational policies
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    MYELIN ORCHESTRATOR                       │
-│                  (Unified Integration Layer)                 │
-└────────────┬────────────┬────────────┬────────────┬─────────┘
-             │            │            │            │
-    ┌────────▼───┐  ┌────▼─────┐  ┌──▼──────┐  ┌──▼─────────┐
-    │ Fairness   │  │ Factual  │  │Toxicity │  │ Governance │
-    │  Pillar    │  │  Check   │  │ Pillar  │  │   Pillar   │
-    │            │  │  (FCAM)  │  │         │  │            │
-    └────────────┘  └──────────┘  └─────────┘  └────────────┘
-             │            │            │            │
-             └────────────┴────────────┴────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          MYELIN ORCHESTRATOR                            │
+│                       (Unified Integration Layer)                       │
+└────────────┬────────────┬────────────┬────────────┬────────────┬────────┘
+             │            │            │            │            │
+    ┌────────▼───┐  ┌─────▼────┐  ┌────▼─────┐  ┌───▼─────┐  ┌───▼────────┐
+    │  Fairness  │  │   Bias   │  │ Factual  │  │Toxicity │  │ Governance │
+    │   Pillar   │  │  Pillar  │  │  Check   │  │ Pillar  │  │   Pillar   │
+    │            │  │          │  │  (FCAM)  │  │         │  │            │
+    └────────────┘  └──────────┘  └──────────┘  └─────────┘  └────────────┘
+             │            │            │            │            │
+             └────────────┴────────────┴────────────┴────────────┘
                               │
                     ┌─────────▼──────────┐
                     │   FastAPI Server   │
