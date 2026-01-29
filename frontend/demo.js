@@ -90,6 +90,8 @@ function displayResult(resultId, data, type = 'success') {
                         pillarInfo = `Risk: ${(report.governance_risk_score * 100).toFixed(1)}%`;
                     } else if (pillar === 'factual') {
                         pillarInfo = `Score: ${pillarData.final_score}`;
+                    } else if (pillar === 'bias') {
+                        pillarInfo = `Bias Index: ${report?.global_bias_index || 0}`;
                     }
 
                     html += `<div class="detail-item"><strong>${pillar.toUpperCase()}:</strong> ${pillarInfo}</div>`;
