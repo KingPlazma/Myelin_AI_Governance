@@ -1,0 +1,82 @@
+[
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Statistical Parity Difference",
+    "score": 1.0,
+    "reason": "Outcome rate difference is 1.000",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Disparate Impact Ratio",
+    "score": 1.0,
+    "reason": "Deviation from ideal disparate impact",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Equal Opportunity Difference",
+    "score": 1.0,
+    "reason": "True Positive Rate (TPR) difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Equalized Odds Difference",
+    "score": 1.0,
+    "reason": "Average difference in TPR and FPR between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Precision Disparity",
+    "score": 1.0,
+    "reason": "Precision (PPV) difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Recall Disparity",
+    "score": 1.0,
+    "reason": "Recall difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "F1-Score Disparity",
+    "score": 1.0,
+    "reason": "F1 Score difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "Accuracy Disparity",
+    "score": 1.0,
+    "reason": "Overall Accuracy difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "False Negative Rate Balance",
+    "score": 1.0,
+    "reason": "False Negative Rate difference",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  },
+  {
+    "scenario": "Algorithmic Fairness Audit",
+    "rule": "False Omission Rate Parity",
+    "score": 1.0,
+    "reason": "FOR difference between groups",
+    "verdict": "FAIL",
+    "timestamp": "2026-01-10 23:57:29"
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "Conversational Audit A",
+    "rule": "Harassment",
+    "score": 0.92,
+    "reason": "Harassing language detected",
+    "timestamp": "2026-01-10 23:57:29"
+  }
+]

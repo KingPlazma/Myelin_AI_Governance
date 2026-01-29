@@ -1,0 +1,44 @@
+[
+  {
+    "scenario": "Conversational Audit A",
+    "rule": "Source Alignment",
+    "score": 0.38461538461538464,
+    "reason": "Checks word overlap with source (Lite Mode) -> Word overlap: 2/11 unique words",
+    "timestamp": "2026-01-10 23:35:22"
+  },
+  {
+    "scenario": "Conversational Audit A",
+    "rule": "Claim Verification",
+    "score": 0.0,
+    "reason": "Verifies claims against source keywords -> 0/2 claims verified",
+    "timestamp": "2026-01-10 23:35:22"
+  },
+  {
+    "scenario": "Conversational Audit B",
+    "rule": "Source Alignment",
+    "score": 0.0,
+    "reason": "Checks word overlap with source (Lite Mode) -> Word overlap: 0/9 unique words",
+    "timestamp": "2026-01-10 23:35:23"
+  },
+  {
+    "scenario": "Conversational Audit B",
+    "rule": "Claim Verification",
+    "score": 0.0,
+    "reason": "Verifies claims against source keywords -> 0/2 claims verified",
+    "timestamp": "2026-01-10 23:35:23"
+  },
+  {
+    "scenario": "Conversational Audit B",
+    "rule": "Numerical Consistency",
+    "score": 0.0,
+    "reason": "Verifies numbers appear in source -> 0/2 numbers verified",
+    "timestamp": "2026-01-10 23:35:23"
+  },
+  {
+    "scenario": "Conversational Audit B",
+    "rule": "Entity Consistency",
+    "score": 0.2,
+    "reason": "Verifies entities (Names/Places) appear in source -> 0/4 entities verified",
+    "timestamp": "2026-01-10 23:35:23"
+  }
+]

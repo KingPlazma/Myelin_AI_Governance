@@ -1,0 +1,37 @@
+
+# Ignore all python cache
+__pycache__/
+*.pyc
+
+# Ignore environment files
+.env
+.venv
+venv/
+env/
+
+# Ignore Markdown Reports (as requested)
+SOLUTION_SUMMARY.md
+FINAL_COMPLETE_REPORT.md
+FINAL_INTEGRATION_TEST_REPORT.md
+FINAL_5_PILLAR_REPORT.md
+FINAL_100_RULES_REPORT.md
+PILLAR_AUDIT_REPORT.md
+INTEGRATION_GUIDE.md
+QUICK_START.md
+SUMMARY.md
+FAIRNESS_PILLAR_PROOF.md
+PILLAR_STATUS_REPORT.md
+FINAL_SYSTEM_STATUS.md
+RUDE_CHATBOT_TESTING_PLAN.md
+
+# Ignore verification scripts
+verify_pillars.py
+verify_full_system.py
+verify_realtime_fairness.py
+
+# Ignore large PDFs (optional, but good practice)
+*.pdf
+
+# Ignore system files
+.DS_Store
+Thumbs.db

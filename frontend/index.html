@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Myelin – AI Governance & Alignment Auditor</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+    <!-- BACKGROUND -->
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <!-- PARTICLES -->
+    <canvas id="particles"></canvas>
+
+    <!-- LOGO / NAV -->
+    <div class="logo">
+        <img src="img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Myelin</h1>
+        <p class="tagline">AI Governance and Alignment Auditor</p>
+
+        <div class="bubble">
+            Myelin is a middleware tool that checks AI-generated content before it is shown to users.
+            It acts as a safety and governance layer, helping teams ensure AI outputs are safe,
+            factually correct, fair, and compliant with policies.
+        </div>
+
+        <div class="buttons">
+            <a href="#" class="btn primary">Get API Access
+                <img src="img/api.png" class="api-icon" alt="API icon">
+            </a>
+            <a href="#features" class="btn secondary">View Features
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="2"
+                        fill="none" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                </svg>
+            </a>
+        </div>
+    </section>
+    <section class="section" id="features">
+        <h2>Core Features</h2>
+
+        <div class="circle-grid">
+            <div class="feature-circle">
+                <img src="img/core 1.png" alt="Safety icon" class="feature-icon">
+                <span>Toxicity & Safety<br>Verification</span>
+            </div>
+
+            <div class="feature-circle">
+                <img src="img/core 2.png" alt="Safety icon" class="feature-icon">
+                <span>Factual<br>Consistency Checking</span>
+            </div>
+
+            <div class="feature-circle">
+                <img src="img/core 3.png" alt="Safety icon" class="feature-icon">
+                <span>Fairness & Bias<br>Analysis</span>
+            </div>
+
+            <div class="feature-circle">
+                <img src="img/core 4.png" alt="Safety icon" class="feature-icon">
+                <span>Alignment & Governance<br>Reporting</span>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- CUSTOM RULES -->
+    <section class="section alt">
+        <h2>Define Your Own Rules</h2>
+        <p class="section-text">
+            Myelin allows teams to define organization-specific verification rules
+            beyond built-in safety checks.
+        </p>
+
+        <div class="add-rule-container">
+            <input type="text" id="rule-input" placeholder="Enter a new rule (e.g. No competitors mentioned)">
+            <button id="add-rule-btn" class="btn primary small-btn">Add Rule</button>
+        </div>
+
+        <div class="grid" id="rules-grid">
+            <div class="card">No political content</div>
+            <div class="card">No medical advice</div>
+            <div class="card">Region-specific compliance rules</div>
+        </div>
+    </section>
+
+    <!-- API ACCESS -->
+<section class="section api-section">
+  <div class="api-card">
+    <h2>API Access</h2>
+    <p class="section-text">
+      Integrate Myelin directly into your AI pipeline using our API.
+      No UI complexity — just clean access points.
+    </p>
+
+    <div class="buttons">
+      <a href="#" class="btn primary">Generate API Key</a>
+      <a href="#" class="btn secondary">View Documentation</a>
+    </div>
+  </div>
+</section>
+
+    <!-- PRICING -->
+<!-- PRICING -->
+<section class="section alt" id="pricing">
+  <h2>Pricing</h2>
+
+  <div class="grid pricing-grid">
+
+    <div class="card pricing">
+      <h3>Free / Academic</h3>
+      <p>Limited API calls</p>
+      <p>Core verification features</p>
+      <a href="#" class="price-btn secondary">Get Started</a>
+    </div>
+
+    <div class="card pricing">
+      <h3>Pro / Developer</h3>
+      <p>Higher API limits</p>
+      <p>Custom rules enabled</p>
+      <a href="#" class="price-btn">Get Started</a>
+    </div>
+
+    <div class="card pricing">
+      <h3>Enterprise</h3>
+      <p>Unlimited usage</p>
+      <p>Advanced governance controls</p>
+      <a href="#" class="price-btn secondary">Contact Sales</a>
+    </div>
+
+  </div>
+</section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>© 2026 Myelin • AI Governance & Alignment Middleware</p>
+        <p>Documentation • Support • Research Disclaimer</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
