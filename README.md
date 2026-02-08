@@ -1,14 +1,6 @@
 # MYELIN - AI Governance and Alignment Auditor
 
-## 🌟 New Features: Custom Rules Engine & Supabase Backend
-**Myelin now includes a complete enterprise-grade backend!**
-- **🔐 API Key Authentication**: Secure access with organization-level isolation.
-- **🛠️ Custom Rules**: Create and manage your own governance rules (Keyword, Regex, LLM) via API.
-- **🏢 Multi-Tenant**: Data isolation for different organizations.
-- **📊 Persistent Audit Logs**: All audits are saved to Supabase for historical analysis.
-- **🚀 Backward Compatible**: Still works as a standalone tool, but now powers up with a database!
 
----
 
 ## 🎯 Overview
 
@@ -22,54 +14,78 @@
 
 ## 🏗️ Architecture
 
-```mermaid
-%%{init: {'theme': 'neutral', 'look': 'handDrawn', 'fontFamily': 'Patrick Hand, cursive'}}%%
-graph LR
-    User((User / App)) 
-    API[Myelin API]
-    Brain{Myelin Engine}
-    DB[(Supabase DB)]
-
-    User -->|1. Send Text + API Key| API
-    API -->|2. Verify Key| DB
-    API -->|3. Process| Brain
-    
-    Brain -->|4. Load Custom Rules| DB
-    Brain -->|5. Check 5 Pillars| Brain
-    
-    Brain -->|6. Save Result| DB
-    API -->|7. Return Audit| User
-
-    style User fill:#fff,stroke:#333
-    style API fill:#e3f2fd,stroke:#1565c0
-    style Brain fill:#fff9c4,stroke:#fbc02d
-    style DB fill:#f3e5f5,stroke:#7b1fa2
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          MYELIN ORCHESTRATOR                            │
+│                       (Unified Integration Layer)                       │
+└────────────┬────────────┬────────────┬────────────┬────────────┬────────┘
+             │            │            │            │            │
+    ┌────────▼───┐  ┌─────▼────┐  ┌────▼─────┐  ┌───▼─────┐  ┌───▼────────┐
+    │  Fairness  │  │   Bias   │  │ Factual  │  │Toxicity │  │ Governance │
+    │   Pillar   │  │  Pillar  │  │  Check   │  │ Pillar  │  │   Pillar   │
+    │            │  │          │  │  (FCAM)  │  │         │  │            │
+    └────────────┘  └──────────┘  └──────────┘  └─────────┘  └────────────┘
+             │            │            │            │            │
+             └────────────┴────────────┴────────────┴────────────┘
+                              │
+                    ┌─────────▼──────────┐
+                    │   FastAPI Server   │
+                    │  (REST API Layer)  │
+                    └─────────┬──────────┘
+                              │
+                    ┌─────────▼──────────┐
+                    │  Frontend Demo UI  │
+                    └────────────────────┘
 ```
 
 ## 📦 Project Structure
 
 ```
 myelin_integrated/
-├── backend/                         # 🆕 NEW: Complete Backend
-│   ├── api/                        # API Endpoints (Auth, Rules, Audit)
-│   ├── config/                     # Database & Env Config
-│   ├── models/                     # Pydantic Models
-│   ├── services/                   # Business Logic
-│   ├── api_server_enhanced.py      # 🚀 MAIN SERVER ENTRY POINT
-│   └── requirements_backend.txt    # Backend dependencies
+├── orchestrator/                    # 🎯 NEW: Unified orchestrator
+│   ├── __init__.py
+│   ├── myelin_orchestrator.py      # Core integration logic
+│   ├── api_server.py               # FastAPI REST API
+│   ├── test_client.py              # Python API client example
+│   └── requirements_api.txt        # API dependencies
 │
-├── orchestrator/                    # Core Integration Layer
-│   ├── myelin_orchestrator.py      
-│   └── ...
+├── Myelin_Fairness_Pillar_RICH_FINAL/
+│   ├── ensemble.py                 # Fairness ensemble manager
+│   ├── main.py                     # Fairness pillar entry point
+│   └── rules/                      # Fairness detection rules
 │
-├── Myelin_Fairness_Pillar_RICH_FINAL/   # Fairness Pillar
-├── FCAM_fixed/                          # Factual Pillar
-├── Toxicity/                            # Toxicity Pillar
-├── Governance_Project/                  # Governance Pillar
+├── FCAM_fixed/
+│   └── FCAM_fixed/
+│       └── Factual_Consistency_Accountability_Module/
+│           ├── main.py             # FCAM entry point
+│           └── modules/
+│               └── factual/
+│                   ├── ensemble_manager.py
+│                   └── rules/      # 20 factual verification rules
 │
-└── frontend/                        # 🎨 Enhanced Frontend
-    ├── index.html                  
-    └── ...
+├── Toxicity/
+│   └── Toxicity/
+│       ├── main.py                 # Toxicity pillar entry point
+│       └── modules/
+│           └── toxicity/
+│               ├── ensemble_manager.py
+│               └── rules/          # Toxicity detection rules
+│
+├── Governance_Project/
+│   └── Governance_Project/
+│       ├── main.py                 # Governance pillar entry point
+│       └── modules/
+│           └── governance/
+│               ├── ensemble_manager.py
+│               └── rules/          # Governance compliance rules
+│
+└── frontend/                        # 🎨 UPDATED: Enhanced frontend
+    ├── index.html                  # Landing page with live demo
+    ├── style.css                   # Main styles
+    ├── demo.css                    # Demo section styles
+    ├── script.js                   # Particle animations
+    ├── demo.js                     # API integration logic
+    └── img/                        # Images and assets
 ```
 
 ## 🚀 Quick Start
@@ -78,80 +94,51 @@ myelin_integrated/
 
 - Python 3.8+
 - pip
-- **Supabase Account** (for custom rules & auth) - *Optional if just running default pillars*
 
 ### Installation
 
-1. **Install Backend & Pillar dependencies:**
-   ```bash
-   # Install backend libs
-   pip install -r backend/requirements_backend.txt
-   
-   # Install orchestrator libs
-   pip install -r orchestrator/requirements_api.txt
-   
-   # Install pillar libs (as needed)
-   pip install -r Toxicity/Toxicity/requirements_toxicity.txt
-   # ... (see other pillars in detailed docs)
-   ```
+1. **Install API dependencies:**
+```bash
+cd orchestrator
+pip install -r requirements_api.txt
+```
 
-2. **Configure Environment Variables:**
-   Create a `.env` file in the root directory:
-   ```env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_anon_key
-   JWT_SECRET=your_super_secret_jwt_key
-   ```
+2. **Install pillar-specific dependencies:**
+```bash
+# Toxicity pillar
+cd ../Toxicity/Toxicity
+pip install -r requirements_toxicity.txt
 
-### Running the Application
+# FCAM pillar
+cd ../../FCAM_fixed/FCAM_fixed/Factual_Consistency_Accountability_Module
+pip install -r requirements.txt
 
-**Run the Enhanced API Server (Recommended):**
-This starts the server with Auth, Database, and Custom Rules support.
+# Governance pillar
+cd ../../../Governance_Project/Governance_Project
+pip install -r requirements.txt
+```
+
+### Running the API Server
 
 ```bash
-python backend/api_server_enhanced.py
+cd orchestrator
+python api_server.py
 ```
 
-The server will start on `http://localhost:8000`.
+The server will start on `http://localhost:8000`
 
-- **API Documentation**: http://localhost:8000/docs
-- **Frontend Demo**: http://localhost:8000 (served statically)
+**API Documentation:** http://localhost:8000/docs
 
----
+### Running the Frontend
 
-## 🔐 Authentication & Custom Rules
-
-### 1. Register & Get API Key
-Use the Frontend (`http://localhost:8000`) or API to register an organization and generate an API Key.
-
-### 2. Add a Custom Rule
-You can now add rules that are specific to your organization!
-
-**Example Payload:**
-```json
-POST /api/v1/rules/custom
-Headers: { "X-API-Key": "myelin_sk_..." }
-{
-  "pillar": "toxicity",
-  "name": "No Competitor Mentions",
-  "rule_type": "keyword",
-  "rule_config": {
-    "keywords": ["CompetitorX", "BrandY"]
-  }
-}
-```
-
-### 3. Run an Audit
-Send your request with the API Key. Myelin will check **Default Rules** + **Your Custom Rules**.
+Open `frontend/index.html` in a web browser, or serve it with a simple HTTP server:
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/audit/conversation" \
-  -H "X-API-Key: myelin_sk_..." \
-  -d '{
-    "user_input": "I hate CompetitorX products!",
-    "bot_response": "They are indeed terrible."
-  }'
+cd frontend
+python -m http.server 3000
 ```
+
+Then visit: http://localhost:3000
 
 ## 📚 API Usage
 
@@ -275,14 +262,64 @@ The enhanced frontend includes:
 
 ## 🧪 Testing
 
-### Test via Python Client
+### Test the Orchestrator Directly
+
+```bash
+cd orchestrator
+python myelin_orchestrator.py
+```
+
+### Test via API Client
+
 ```bash
 cd orchestrator
 python test_client.py
 ```
 
 ### Test Individual Pillars
-Refer to the `README` files inside each pillar directory for specific testing instructions.
+
+```bash
+# Fairness
+cd Myelin_Fairness_Pillar_RICH_FINAL
+python main.py
+
+# Factual Check
+cd FCAM_fixed/FCAM_fixed/Factual_Consistency_Accountability_Module
+python main.py
+
+# Toxicity
+cd Toxicity/Toxicity
+python main.py
+
+# Governance
+cd Governance_Project/Governance_Project
+python main.py
+```
+
+## 🔧 Configuration
+
+### API Server Configuration
+
+Edit `orchestrator/api_server.py`:
+
+```python
+# Change port
+uvicorn.run("api_server:app", port=8000)
+
+# Enable/disable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Restrict in production
+)
+```
+
+### Frontend API URL
+
+Edit `frontend/demo.js`:
+
+```javascript
+const API_BASE_URL = 'http://localhost:8000';
+```
 
 ## 📈 Performance
 
@@ -292,14 +329,32 @@ Refer to the `README` files inside each pillar directory for specific testing in
 
 ## 🚢 Deployment
 
-### Docker Deployment
+### Docker Deployment (Recommended)
+
 ```dockerfile
 FROM python:3.9-slim
+
 WORKDIR /app
 COPY . /app
-RUN pip install -r backend/requirements_backend.txt
-# ... install pillar requirements ...
-CMD ["python", "backend/api_server_enhanced.py"]
+
+# Install dependencies
+RUN pip install -r orchestrator/requirements_api.txt
+RUN pip install -r Toxicity/Toxicity/requirements_toxicity.txt
+# ... install other pillar dependencies
+
+EXPOSE 8000
+
+CMD ["python", "orchestrator/api_server.py"]
+```
+
+### Production Deployment
+
+```bash
+# Using Gunicorn with Uvicorn workers
+gunicorn orchestrator.api_server:app \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000
 ```
 
 ## 🛡️ Security Considerations

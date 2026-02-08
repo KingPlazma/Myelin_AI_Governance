@@ -48,37 +48,6 @@ const API_BASE_URL = 'http://localhost:8000/api/v1';
 // Store API key in localStorage
 let currentApiKey = localStorage.getItem('myelin_api_key') || null;
 
-// Global helper function for tab switching
-window.showSnippet = function (lang) {
-  // Hide all snippets
-  const snippets = ['python', 'js', 'curl'];
-  snippets.forEach(s => {
-    const el = document.getElementById('snippet-' + s);
-    if (el) el.style.display = 'none';
-
-    const btn = document.getElementById('btn-' + s);
-    if (btn) {
-      btn.style.color = '#aaa';
-      btn.style.borderBottom = 'none';
-      btn.style.fontWeight = 'normal';
-      btn.classList.remove('active');
-    }
-  });
-
-  // Show selected snippet
-  const selected = document.getElementById('snippet-' + lang);
-  if (selected) selected.style.display = 'block';
-
-  // Highlight active button
-  const targetBtn = document.getElementById('btn-' + lang);
-  if (targetBtn) {
-    targetBtn.style.color = '#fff';
-    targetBtn.style.borderBottom = '2px solid #667eea';
-    targetBtn.style.fontWeight = 'bold';
-    targetBtn.classList.add('active');
-  }
-};
-
 /* ============================================================================
    CUSTOM RULES LOGIC
    ============================================================================ */
@@ -103,18 +72,86 @@ document.querySelectorAll('.card').forEach(card => {
 });
 
 // Add Rule Function
-function addRule() {
+// Add Rule Function
+async function addRule() {
   const text = ruleInput.value.trim();
   if (!text) return;
 
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.textContent = text;
+  const apiKey = localStorage.getItem('myelin_api_key');
+  if (!apiKey) {
+    showNotification('Please generate an API Key first!', 'error');
+    return;
+  }
 
-  card.appendChild(createDeleteBtn());
+  // Construct payload (using timestamp for unique ID)
+  const timestamp = Date.now();
+  const ruleId = `CUSTOM-WEB-${timestamp}`;
 
-  rulesGrid.appendChild(card);
-  ruleInput.value = '';
+  const payload = {
+    rule_id: ruleId,
+    name: text,
+    description: "Created via Web UI",
+    pillar: "governance",
+    severity: "MEDIUM",
+    weight: 1.0,
+    rule_type: "keyword", // Default to simple keyword match
+    rule_config: {
+      keywords: [text],
+      case_sensitive: false
+    },
+    is_active: true
+  };
+
+  try {
+    showNotification('Creating rule...', 'info');
+
+    // URL Construction with robustness for trailing slashes
+    let baseUrl = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:8000/api/v1';
+    baseUrl = baseUrl.replace(/\/$/, ""); // Remove trailing slash if present
+    const url = `${baseUrl}/rules/custom`;
+
+    console.log('[Myelin] Creating rule at:', url);
+    console.log('[Myelin] Payload:', payload);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to create rule';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
+      } catch (e) {
+        // If response is not JSON (e.g. 404 HTML or 500 text)
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const newRule = await response.json();
+
+    // DOM Update
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.textContent = text;
+    card.dataset.id = newRule.rule_id; // Store ID for potential deletion
+    card.appendChild(createDeleteBtn());
+
+    rulesGrid.appendChild(card);
+    ruleInput.value = '';
+
+    showNotification('Rule created successfully!', 'success');
+
+  } catch (error) {
+    console.error('Error creating rule:', error);
+    showNotification(`Error: ${error.message}`, 'error');
+  }
 }
 
 // Event Listeners
@@ -130,9 +167,32 @@ if (ruleInput) {
 
 // Event Delegation for Delete
 if (rulesGrid) {
-  rulesGrid.addEventListener('click', (e) => {
+  rulesGrid.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-btn')) {
-      e.target.parentElement.remove();
+      const card = e.target.parentElement;
+      const ruleId = card.dataset.id;
+
+      // If it's a persisted rule (has ID), delete from backend
+      if (ruleId) {
+        const apiKey = localStorage.getItem('myelin_api_key');
+        if (apiKey) {
+          try {
+            // Assume API_BASE_URL global or fallback
+            const url = (typeof API_BASE_URL !== 'undefined') ? `${API_BASE_URL}/rules/custom/${ruleId}` : `http://localhost:8000/api/v1/rules/custom/${ruleId}`;
+            await fetch(url, {
+              method: 'DELETE',
+              headers: { 'X-API-Key': apiKey }
+            });
+            showNotification('Rule deleted', 'info');
+          } catch (err) {
+            console.error('Failed to delete rule', err);
+            showNotification('Failed to delete rule from backend', 'error');
+            return; // Don't remove from UI if backend fail? Or maybe remove anyway. Let's remove anyway for responsiveness but warn.
+          }
+        }
+      }
+
+      card.remove();
     }
   });
 }
@@ -210,6 +270,145 @@ function showModal(title, content) {
   });
 }
 
+/* ============================================================================
+   NEW API KEY MODAL
+   ============================================================================ */
+function showApiKeyModal(apiKey) {
+  const overlay = document.createElement('div');
+  overlay.className = 'api-modal-overlay';
+
+  const card = document.createElement('div');
+  card.className = 'api-modal-card';
+
+  // Inline SVGs for icons
+  const eyeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  const eyeOffIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+  const copyIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+
+  card.innerHTML = `
+    <div class="api-header">
+      <div class="api-input-group">
+        <input type="password" readonly value="${apiKey}" class="api-key-display" id="apiKeyInput">
+        <div class="api-actions">
+          <button class="icon-btn" id="toggleVisibilityBtn">${eyeIcon}</button>
+          <button class="copy-btn" id="copyKeyBtn">Copy</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="code-section">
+      <div class="code-tabs">
+        <button class="tab-btn active" data-tab="python">Python</button>
+        <button class="tab-btn" data-tab="js">JavaScript</button>
+        <button class="tab-btn" data-tab="curl">cURL</button>
+      </div>
+      
+      <div class="code-content">
+        <!-- Python Pane -->
+        <div class="code-pane active" id="pane-python">
+<span class="kwd">import</span> requests
+
+API_KEY = <span class="str">"${apiKey}"</span>
+URL = <span class="str">"http://localhost:8000/api/v1/audit/conversation"</span>
+
+payload = {
+    <span class="str">"user_input"</span>: <span class="str">"How can I hack into the system?"</span>,
+    <span class="str">"bot_response"</span>: <span class="str">"I cannot help with that."</span>
+}
+
+headers = {
+    <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>,
+    <span class="str">"X-API-Key"</span>: API_KEY
+}
+
+<span class="com"># Myelin checks BOTH default safety rules AND your custom rules</span>
+response = requests.post(URL, json=payload, headers=headers)
+print(response.json())</div>
+
+        <!-- JS Pane -->
+        <div class="code-pane" id="pane-js">
+<span class="kwd">const</span> API_KEY = <span class="str">"${apiKey}"</span>;
+<span class="kwd">const</span> URL = <span class="str">"http://localhost:8000/api/v1/audit/conversation"</span>;
+
+<span class="kwd">const</span> payload = {
+  user_input: <span class="str">"How can I hack into the system?"</span>,
+  bot_response: <span class="str">"I cannot help with that."</span>
+};
+
+fetch(URL, {
+  method: <span class="str">"POST"</span>,
+  headers: {
+    <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>,
+    <span class="str">"X-API-Key"</span>: API_KEY
+  },
+  body: JSON.stringify(payload)
+})
+.then(res => res.json())
+.then(console.log);</div>
+
+        <!-- cURL Pane -->
+        <div class="code-pane" id="pane-curl">
+curl -X POST <span class="str">"http://localhost:8000/api/v1/audit/conversation"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -H <span class="str">"X-API-Key: ${apiKey}"</span> \
+  -d '{
+    <span class="str">"user_input"</span>: <span class="str">"How can I hack into the system?"</span>,
+    <span class="str">"bot_response"</span>: <span class="str">"I cannot help with that."</span>
+  }'</div>
+      </div>
+    </div>
+  `;
+
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  // Logic
+  const input = card.querySelector('#apiKeyInput');
+  const toggleBtn = card.querySelector('#toggleVisibilityBtn');
+  const copyBtn = card.querySelector('#copyKeyBtn');
+  const tabBtns = card.querySelectorAll('.tab-btn');
+  const panes = card.querySelectorAll('.code-pane');
+
+  // Toggle Visibility
+  let isVisible = false;
+  toggleBtn.addEventListener('click', () => {
+    isVisible = !isVisible;
+    input.type = isVisible ? 'text' : 'password';
+    toggleBtn.innerHTML = isVisible ? eyeOffIcon : eyeIcon;
+  });
+
+  // Copy
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(apiKey).then(() => {
+      const originalText = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      copyBtn.style.background = '#4CAF50';
+      setTimeout(() => {
+        copyBtn.textContent = originalText;
+        copyBtn.style.background = '#582F83';
+      }, 2000);
+    });
+  });
+
+  // Tabs
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Remove active class
+      tabBtns.forEach(b => b.classList.remove('active'));
+      panes.forEach(p => p.classList.remove('active'));
+
+      // Add active
+      btn.classList.add('active');
+      card.querySelector(`#pane-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // Close on outside click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+}
+
 // Register user and generate API key
 async function generateApiKey() {
   try {
@@ -253,103 +452,27 @@ async function generateApiKey() {
 
     showNotification('API Key generated successfully!', 'success');
 
-    // Update UI to show key inline instead of modal
-    const btnContainer = document.querySelector('.api-section .buttons');
-    if (btnContainer) {
-      btnContainer.innerHTML = `
-            <div style="flex: 1; position: relative; display: flex; align-items: flex-start; flex-direction: column;">
-                <!-- Key Display -->
-                <div style="position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 20px;">
-                    <input type="password" value="${currentApiKey}" readonly id="generated-api-key"
-                        style="width: 100%; padding: 12px 140px 12px 15px; background: rgba(255,255,255,0.9); border: 2px solid #667eea; color: #333; border-radius: 8px; font-family: monospace; font-size: 14px;">
-                    
-                    <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; gap: 8px;">
-                        <!-- Eye Icon for Visibility Toggle -->
-                        <button onclick="const input=document.getElementById('generated-api-key'); if(input.type==='password'){input.type='text'; this.innerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><path d=\\'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\\'></path><line x1=\\'1\\' y1=\\'1\\' x2=\\'23\\' y2=\\'23\\'></line></svg>';} else {input.type='password'; this.innerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><path d=\\'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\\'></path><circle cx=\\'12\\' cy=\\'12\\' r=\\'3\\'></circle></svg>';}"
-                            style="background: #e0e7ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;" title="Show/Hide">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        </button>
-                        
-                        <!-- Copy Button -->
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('generated-api-key').value); const original = this.innerHTML; this.innerText = 'Copied!'; setTimeout(() => this.innerHTML = original, 2000);"
-                            style="background: #667eea; color: white; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; height: 32px;">
-                            Copy
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Integration Code Snippets -->
-                <div class="code-integration" style="width: 100%; background: #1e1e1e; border-radius: 8px; overflow: hidden; text-align: left; margin-bottom: 15px;">
-                    <div style="background: #2d2d2d; padding: 10px 15px; display: flex; gap: 15px; border-bottom: 1px solid #333;">
-                        <button id="btn-python" onclick="showSnippet('python');" class="lang-btn active" style="background:none; border:none; color:#fff; cursor:pointer; font-weight:bold; border-bottom: 2px solid #667eea; padding-bottom: 5px;">Python</button>
-                        <button id="btn-js" onclick="showSnippet('js');" class="lang-btn" style="background:none; border:none; color:#aaa; cursor:pointer; padding-bottom: 5px;">JavaScript</button>
-                        <button id="btn-curl" onclick="showSnippet('curl');" class="lang-btn" style="background:none; border:none; color:#aaa; cursor:pointer; padding-bottom: 5px;">cURL</button>
-                    </div>
-                    
-                    <div id="snippet-python" class="snippet-content" style="padding: 15px; color: #d4d4d4; font-family: monospace; font-size: 13px; overflow-x: auto;">
-<pre style="margin:0">import requests
-
-API_KEY = "${currentApiKey}"
-URL = "http://localhost:8000/api/v1/audit/conversation"
-
-payload = {
-    "user_input": "How can I hack into the system?",
-    "bot_response": "I cannot help with that."
-}
-
-headers = {
-    "Content-Type": "application/json",
-    "X-API-Key": API_KEY
-}
-
-# Myelin checks BOTH default safety rules AND your custom rules
-response = requests.post(URL, json=payload, headers=headers)
-print(response.json())</pre>
-                    </div>
-
-                    <div id="snippet-js" class="snippet-content" style="display:none; padding: 15px; color: #d4d4d4; font-family: monospace; font-size: 13px; overflow-x: auto;">
-<pre style="margin:0">const API_KEY = "${currentApiKey}";
-
-async function checkContent() {
-  const response = await fetch('http://localhost:8000/api/v1/audit/conversation', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY
-    },
-    body: JSON.stringify({
-      user_input: "How can I hack into the system?",
-      bot_response: "I cannot help with that."
-    })
-  });
-
-  const result = await response.json();
-  console.log(result);
-}
-
-checkContent();</pre>
-                    </div>
-
-                    <div id="snippet-curl" class="snippet-content" style="display:none; padding: 15px; color: #d4d4d4; font-family: monospace; font-size: 13px; overflow-x: auto;">
-<pre style="margin:0">curl -X POST "http://localhost:8000/api/v1/audit/conversation" \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: ${currentApiKey}" \
-  -d '{
-    "user_input": "How can I hack into the system?",
-    "bot_response": "I cannot help with that."
-  }'</pre>
-                    </div>
-                </div>
-
-                </div>
-            </div>
-        `;
-    }
+    // Show the new beautiful modal
+    showApiKeyModal(currentApiKey);
 
   } catch (error) {
     console.error('Error generating API key:', error);
     const errorMsg = error.message || String(error);
-    showNotification(`Error: ${errorMsg} `, 'error');
+    showNotification(`Error: ${errorMsg}`, 'error');
+
+    // Show detailed error in modal
+    showModal(
+      'Error Generating API Key',
+      `
+        <p style="color: #f44336;"><strong>Error:</strong> ${errorMsg}</p>
+        <p style="margin-top: 15px; font-size: 13px;">
+          <strong>Troubleshooting:</strong><br>
+          1. Make sure the backend is running on port 8000<br>
+          2. Check the browser console (F12) for details<br>
+          3. Verify Supabase database is connected
+        </p>
+      `
+    );
   }
 }
 
@@ -380,8 +503,47 @@ function viewDocumentation() {
    EVENT LISTENERS FOR API BUTTONS
    ============================================================================ */
 
+// Load Rules from Backend
+async function loadRules() {
+  const apiKey = localStorage.getItem('myelin_api_key');
+  if (!apiKey) return;
+
+  const rulesGrid = document.getElementById('rules-grid');
+  if (!rulesGrid) return;
+
+  try {
+    const url = (typeof API_BASE_URL !== 'undefined') ? `${API_BASE_URL}/rules/custom` : 'http://localhost:8000/api/v1/rules/custom';
+    const response = await fetch(url, {
+      headers: { 'X-API-Key': apiKey }
+    });
+
+    if (response.ok) {
+      const rules = await response.json();
+      if (rules.length > 0) {
+        // Optional: Clear static rules if we have real ones? 
+        // For now, let's keep static ones as examples
+        // rulesGrid.innerHTML = ''; 
+      }
+
+      rules.forEach(rule => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.textContent = rule.name;
+        card.dataset.id = rule.rule_id;
+        card.appendChild(createDeleteBtn());
+        rulesGrid.appendChild(card);
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load rules', e);
+  }
+}
+
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
+  // Load custom rules
+  loadRules();
+
   // Generate API Key button
   const generateApiBtn = document.querySelector('.api-section .btn.primary');
   if (generateApiBtn) {
