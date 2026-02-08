@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Myelin API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #582F83;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #582F83;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #6a3a9a;
+        }
+
+        #output {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .info {
+            color: #2196F3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Myelin API Test Page</h1>
+        <p>Use this page to test the backend API directly</p>
+
+        <div>
+            <button onclick="testHealth()">1. Test Backend Health</button>
+            <button onclick="registerUser()">2. Register User & Get API Key</button>
+            <button onclick="createRule()">3. Create Custom Rule</button>
+            <button onclick="runAudit()">4. Run Audit</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div id="output">Click a button above to test the API...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let apiKey = localStorage.getItem('test_api_key') || null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        async function testHealth() {
+            log('Testing backend health...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                log(`✅ Backend is ${data.status}`, 'success');
+                log(`Database: ${data.database}`, 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log('Make sure backend is running on port 8000', 'error');
+            }
+        }
+
+        async function registerUser() {
+            log('Registering user...', 'info');
+            try {
+                const timestamp = Date.now();
+                const email = `test${timestamp}@example.com`;
+                const orgName = `TestOrg${timestamp}`;
+
+                log(`Email: ${email}`, 'info');
+                log(`Organization: ${orgName}`, 'info');
+
+                const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        password: 'SecurePass123!',
+                        organization_name: orgName,
+                        full_name: 'Test User',
+                        role: 'developer'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ HTTP ${response.status}: ${response.statusText}`, 'error');
+                    log(`Response: ${errorText}`, 'error');
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        log(`Error details: ${JSON.stringify(errorJson, null, 2)}`, 'error');
+                    } catch (e) { }
+                    return;
+                }
+
+                const data = await response.json();
+                apiKey = data.access_token;
+                localStorage.setItem('test_api_key', apiKey);
+
+                log('✅ User registered successfully!', 'success');
+                log(`API Key: ${apiKey}`, 'success');
+                log(`Stored in localStorage as 'test_api_key'`, 'info');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function createRule() {
+            if (!apiKey) {
+                log('❌ No API key found. Register a user first!', 'error');
+                return;
+            }
+
+            log('Creating custom rule...', 'info');
+            try {
+                const ruleId = `CUSTOM-TEST-${Date.now()}`;
+                const response = await fetch(`${API_BASE}/api/v1/rules/custom`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        rule_id: ruleId,
+                        pillar: 'toxicity',
+                        name: 'Test Rule',
+                        rule_type: 'keyword',
+                        rule_config: {
+                            keywords: ['testword'],
+                            case_sensitive: false
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ HTTP ${response.status}: ${response.statusText}`, 'error');
+                    log(`Response: ${errorText}`, 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                log('✅ Custom rule created!', 'success');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runAudit() {
+            if (!apiKey) {
+                log('❌ No API key found. Register a user first!', 'error');
+                return;
+            }
+
+            log('Running audit...', 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/audit/conversation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        user_input: 'Hello',
+                        bot_response: 'This has testword in it'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ HTTP ${response.status}: ${response.statusText}`, 'error');
+                    log(`Response: ${errorText}`, 'error');
+                    return;
+                }
+
+                const data = await response.json();
+                log('✅ Audit complete!', 'success');
+                log(`Decision: ${data.overall.decision}`, 'info');
+                log(`Custom rules triggered: ${data.overall.custom_rules_triggered || 0}`, 'info');
+                log(JSON.stringify(data, null, 2), 'info');
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Show current API key on load
+        if (apiKey) {
+            log(`Current API Key: ${apiKey}`, 'info');
+            log('You can use buttons 3 and 4 directly', 'info');
+        }
+    </script>
+</body>
+
+</html>
