@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Myelin Connection Debugger</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        pre {
+            background: #eee;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Myelin API Debugger</h1>
+
+    <div class="card">
+        <h3>Configuration</h3>
+        <label>API Base URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:8000" style="width: 300px;">
+        <button onclick="runTests()">Run Diagnostics</button>
+    </div>
+
+    <div class="card">
+        <h3>Test 1: Health Check (GET /health)</h3>
+        <div id="test1-status" class="status">Waiting...</div>
+        <pre id="test1-log"></pre>
+    </div>
+
+    <div class="card">
+        <h3>Test 2: Custom Rule Endpoint (POST /api/v1/rules/custom)</h3>
+        <p>Sending dummy request with X-API-Key header to test CORS.</p>
+        <div id="test2-status" class="status">Waiting...</div>
+        <pre id="test2-log"></pre>
+    </div>
+
+    <script>
+        function log(id, msg) {
+            const el = document.getElementById(id);
+            el.textContent += msg + '\n';
+        }
+
+        function setStatus(id, status, isSuccess) {
+            const el = document.getElementById(id);
+            el.textContent = status;
+            el.className = 'status ' + (isSuccess ? 'success' : 'error');
+        }
+
+        async function runTests() {
+            const baseUrl = document.getElementById('apiUrl').value.replace(/\/$/, '');
+
+            // Clear logs
+            document.getElementById('test1-log').textContent = '';
+            document.getElementById('test2-log').textContent = '';
+
+            // TEST 1: Health Check
+            log('test1-log', `Fetching ${baseUrl}/health...`);
+            try {
+                const res = await fetch(`${baseUrl}/health`);
+                log('test1-log', `Status: ${res.status} ${res.statusText}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    log('test1-log', `Response: ${JSON.stringify(data, null, 2)}`);
+                    setStatus('test1-status', 'SUCCESS', true);
+                } else {
+                    setStatus('test1-status', 'FAILED (HTTP Error)', false);
+                }
+            } catch (e) {
+                log('test1-log', `Error: ${e.message}`);
+                setStatus('test1-status', 'FAILED (Network Error - Check CORS/Server)', false);
+            }
+
+            // TEST 2: Rules POST
+            // We expect 401 Unauthorized (because dummy key) or 422 Validation Error
+            // If we get "Failed to fetch", it's CORS.
+            const rulesUrl = `${baseUrl}/api/v1/rules/custom`;
+            log('test2-log', `POST request to ${rulesUrl}...`);
+            log('test2-log', `Headers: Content-Type: application/json, X-API-Key: debug-key`);
+
+            try {
+                const res = await fetch(rulesUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': 'debug-key-123'
+                    },
+                    body: JSON.stringify({
+                        rule_id: 'DEBUG-TEST-001',
+                        name: 'Debug Rule',
+                        pillar: 'governance',
+                        rule_type: 'keyword',
+                        rule_config: { keywords: ['test'] }
+                    })
+                });
+
+                log('test2-log', `Status: ${res.status} ${res.statusText}`);
+                const text = await res.text();
+                log('test2-log', `Response Body: ${text.substring(0, 200)}...`);
+
+                if (res.status === 201) {
+                    setStatus('test2-status', 'SUCCESS (Created)', true);
+                } else if (res.status === 401 || res.status === 403) {
+                    setStatus('test2-status', 'SUCCESS (CORS working, Auth Check passed)', true);
+                    log('test2-log', 'Note: 401/403 is GOOD here - it means server received request!');
+                } else if (res.status === 422) {
+                    setStatus('test2-status', 'SUCCESS (Server reached, Validation Error)', true);
+                } else if (res.status === 404) {
+                    setStatus('test2-status', 'FAILED (Endpoint Not Found - Check URL)', false);
+                } else {
+                    setStatus('test2-status', 'UNKNOWN STATUS', false);
+                }
+            } catch (e) {
+                log('test2-log', `FATAL ERROR: ${e.message}`);
+                if (e.message.includes('fetch')) {
+                    log('test2-log', 'Creating DIAGNOSIS: This is likely a CORS issue or Server Port mismatch.');
+                }
+                setStatus('test2-status', 'FAILED (Network/CORS)', false);
+            }
+        }
+    </script>
+</body>
+
+</html>

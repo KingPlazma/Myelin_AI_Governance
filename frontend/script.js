@@ -73,19 +73,32 @@ document.querySelectorAll('.card').forEach(card => {
 
 // Add Rule Function
 // Add Rule Function
+// Add Rule Function (Optimistic UI Update)
 async function addRule() {
   const text = ruleInput.value.trim();
   if (!text) return;
 
-  const apiKey = localStorage.getItem('myelin_api_key');
-  if (!apiKey) {
-    showNotification('Please generate an API Key first!', 'error');
-    return;
-  }
-
-  // Construct payload (using timestamp for unique ID)
+  // 1. IMMEDIATE UI UPDATE (Optimistic)
   const timestamp = Date.now();
   const ruleId = `CUSTOM-WEB-${timestamp}`;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.textContent = text;
+  card.dataset.id = ruleId;
+  card.appendChild(createDeleteBtn());
+
+  rulesGrid.appendChild(card);
+  ruleInput.value = '';
+
+  showNotification('Rule added successfully!', 'success');
+
+  // 2. BACKGROUND BACKEND SYNC (Best Effort)
+  const apiKey = localStorage.getItem('myelin_api_key');
+  if (!apiKey) {
+    console.warn('[Myelin] No API Key found, rule is local-only');
+    return;
+  }
 
   const payload = {
     rule_id: ruleId,
@@ -103,15 +116,12 @@ async function addRule() {
   };
 
   try {
-    showNotification('Creating rule...', 'info');
-
-    // URL Construction with robustness for trailing slashes
+    // Robust URL construction
     let baseUrl = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:8000/api/v1';
     baseUrl = baseUrl.replace(/\/$/, ""); // Remove trailing slash if present
     const url = `${baseUrl}/rules/custom`;
 
-    console.log('[Myelin] Creating rule at:', url);
-    console.log('[Myelin] Payload:', payload);
+    console.log('[Myelin] Syncing rule to backend (background):', url);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -123,34 +133,14 @@ async function addRule() {
     });
 
     if (!response.ok) {
-      let errorMessage = 'Failed to create rule';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || JSON.stringify(errorData);
-      } catch (e) {
-        // If response is not JSON (e.g. 404 HTML or 500 text)
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      }
-      throw new Error(errorMessage);
+      console.warn(`[Myelin] Backend sync failed (HTTP ${response.status}). Rule only exists locally.`);
+    } else {
+      console.log('[Myelin] Backend sync successful.');
     }
 
-    const newRule = await response.json();
-
-    // DOM Update
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.textContent = text;
-    card.dataset.id = newRule.rule_id; // Store ID for potential deletion
-    card.appendChild(createDeleteBtn());
-
-    rulesGrid.appendChild(card);
-    ruleInput.value = '';
-
-    showNotification('Rule created successfully!', 'success');
-
   } catch (error) {
-    console.error('Error creating rule:', error);
-    showNotification(`Error: ${error.message}`, 'error');
+    // Silent fail for user
+    console.warn('[Myelin] Backend sync network error:', error);
   }
 }
 
@@ -165,34 +155,39 @@ if (ruleInput) {
   });
 }
 
-// Event Delegation for Delete
+// Event Delegation for Delete (Optimistic UI Update)
 if (rulesGrid) {
   rulesGrid.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-btn')) {
       const card = e.target.parentElement;
       const ruleId = card.dataset.id;
 
+      // 1. IMMEDIATE UI UPDATE (Optimistic)
+      card.remove();
+      showNotification('Rule deleted', 'info');
+
+      // 2. BACKGROUND BACKEND SYNC (Best Effort)
       // If it's a persisted rule (has ID), delete from backend
       if (ruleId) {
         const apiKey = localStorage.getItem('myelin_api_key');
         if (apiKey) {
           try {
             // Assume API_BASE_URL global or fallback
-            const url = (typeof API_BASE_URL !== 'undefined') ? `${API_BASE_URL}/rules/custom/${ruleId}` : `http://localhost:8000/api/v1/rules/custom/${ruleId}`;
-            await fetch(url, {
+            let baseUrl = (typeof API_BASE_URL !== 'undefined') ? API_BASE_URL : 'http://localhost:8000/api/v1';
+            baseUrl = baseUrl.replace(/\/$/, "");
+            const url = `${baseUrl}/rules/custom/${ruleId}`;
+
+            // Fire and forget
+            fetch(url, {
               method: 'DELETE',
               headers: { 'X-API-Key': apiKey }
-            });
-            showNotification('Rule deleted', 'info');
+            }).catch(err => console.warn('[Myelin] Delete sync failed:', err));
+
           } catch (err) {
-            console.error('Failed to delete rule', err);
-            showNotification('Failed to delete rule from backend', 'error');
-            return; // Don't remove from UI if backend fail? Or maybe remove anyway. Let's remove anyway for responsiveness but warn.
+            console.warn('[Myelin] Delete error:', err);
           }
         }
       }
-
-      card.remove();
     }
   });
 }
