@@ -204,6 +204,27 @@ class MLModelRequest(BaseModel):
     y_pred: list = Field(..., description="Model predictions")
     sensitive: list = Field(..., description="Sensitive attributes")
 
+class CustomRuleRequest(BaseModel):
+    rule_id: str
+    name: str
+    description: Optional[str] = None
+    pillar: str
+    severity: str = "MEDIUM"
+    weight: float = 1.0
+    rule_type: str = "keyword"
+    rule_config: dict = {}
+    is_active: bool = True
+
+class RegistrationRequest(BaseModel):
+    email: str
+    password: str
+    organization_name: str
+    full_name: str
+    role: str = "developer"
+
+# In-memory store for custom rules
+custom_rules_store = []
+
 @app.get("/")
 async def root():
     loaded = sum(1 for v in pillars_status.values() if "✅" in v)
@@ -232,6 +253,16 @@ async def status():
         "loaded_pillars": loaded,
         "total_rules": loaded * 20,
         "pillars": pillars_status
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for frontend compatibility"""
+    loaded = sum(1 for v in pillars_status.values() if "✅" in v)
+    return {
+        "status": "healthy",
+        "pillars_loaded": loaded,
+        "total_rules": loaded * 20
     }
 
 @app.post("/api/v1/audit/conversation")
@@ -367,12 +398,36 @@ async def generate_key():
     
     return {
         "api_key": key,
+        "access_token": key, # Compatibility with register endpoint
         "status": "active",
         "permissions": ["toxicity", "governance", "bias", "fairness", "factual"],
         "rules_enabled": loaded * 20,
         "expires_in": "30 days",
         "created_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
+
+@app.post("/api/v1/auth/register")
+async def register(request: RegistrationRequest):
+    """Mock registration for frontend compatibility"""
+    return await generate_key()
+
+@app.get("/api/v1/rules/custom")
+async def get_custom_rules():
+    """Retrieve custom rules"""
+    return custom_rules_store
+
+@app.post("/api/v1/rules/custom")
+async def create_custom_rule(rule: CustomRuleRequest):
+    """Add a new custom rule"""
+    custom_rules_store.append(rule.dict())
+    return {"status": "success", "rule": rule}
+
+@app.delete("/api/v1/rules/custom/{rule_id}")
+async def delete_custom_rule(rule_id: str):
+    """Delete a custom rule"""
+    global custom_rules_store
+    custom_rules_store = [r for r in custom_rules_store if r["rule_id"] != rule_id]
+    return {"status": "success"}
 
 if __name__ == "__main__":
     print("\n" + "="*80)
