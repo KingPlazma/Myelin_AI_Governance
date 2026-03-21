@@ -7,6 +7,8 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
+import json
+from datetime import datetime
 
 from agent_core import get_agent_core
 
@@ -105,6 +107,20 @@ async def proxy_chat_completions(request: ChatCompletionRequest, raw_request: Re
         llm_result["choices"][0]["message"]["content"] = remediated_reply
         # Add Myelin headers for observability
         llm_result["myelin_audit"] = response_audit["overall"]
+
+    # --- LOGGING FOR BACKGROUND OBSERVER ---
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "user_prompt": user_prompt,
+        "bot_response": bot_reply,
+        "remediated_response": remediated_reply if remediated_reply != bot_reply else None,
+        "risk_score": response_audit.get("overall", {}).get("risk_score", 0)
+    }
+    try:
+        with open("agent_logs.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+    except Exception as e:
+        logger.error(f"Failed to log conversation for observer: {e}")
 
     return llm_result
 
