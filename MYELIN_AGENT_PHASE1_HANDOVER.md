@@ -27,9 +27,6 @@ I have created a dedicated `agent/` directory with the following components:
 
 To reach 100%, here are the specific tasks left to implement:
 
-### 1. The 24/7 Asynchronous Observer Loop
-*   **Goal:** The Proxy handles real-time traffic. We need an "Observer" that sweeps through secondary channels (databases, standard out logs, or message queues) 24/7.
-*   **Task:** Create a script (e.g., `agent/observer_loop.py`) that uses `asyncio` or `Celery` to tail a log file or query a "logs" table in a database and run the `MyelinOrchestrator` on past conversations to identify trends.
 
 ### 2. Proactive Alerting System
 *   **Goal:** Notify the team when the AI is behaving poorly at scale.
