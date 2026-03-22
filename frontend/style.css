@@ -497,7 +497,7 @@ body {
 }
 
 /* DELETE BUTTON ON CARD */
-.card {
+.rules-grid .card {
   position: relative;
   /* For positioning delete btn */
   /* existing styles... */
@@ -707,6 +707,132 @@ body {
 
 .code-pane.active {
   display: block;
+}
+
+/* PRICING GRID TUNING */
+.pricing-grid {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 992px) {
+  .section {
+    padding: 80px 6%;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+  }
+
+  .bubble {
+    max-width: 100%;
+  }
+
+  .pricing-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .logo {
+    left: 16px;
+    top: 14px;
+    font-size: 24px;
+  }
+
+  .hero {
+    padding: 24px 16px;
+  }
+
+  .hero h1 {
+    font-size: 36px;
+  }
+
+  .tagline {
+    font-size: 16px;
+  }
+
+  .bubble {
+    padding: 14px 16px;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+    margin: 6px 0;
+  }
+
+  .buttons {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .section h2 {
+    font-size: 30px;
+  }
+
+  .feature-circle {
+    width: 190px;
+    height: 190px;
+    padding: 16px;
+  }
+
+  .feature-circle span {
+    font-size: 13px;
+  }
+
+  #rule-input {
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .api-card {
+    padding: 32px 20px;
+    border-radius: 18px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .pricing {
+    padding: 24px 18px;
+  }
+
+  .pricing.highlight {
+    transform: none;
+  }
+
+  .api-modal-card {
+    width: 95%;
+  }
+
+  .api-header {
+    padding: 18px 16px;
+  }
+
+  .api-input-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .api-actions {
+    justify-content: flex-end;
+  }
+
+  .code-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .code-content {
+    font-size: 12px;
+    padding: 16px;
+  }
 }
 
 /* Syntax Highlighting */

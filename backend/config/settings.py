@@ -28,10 +28,11 @@ class Settings(BaseSettings):
     API_KEY_LENGTH: int = 32
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
-    # Supabase
-    SUPABASE_URL: str = ""
-    SUPABASE_KEY: str = ""
-    SUPABASE_SERVICE_KEY: str = ""
+    # Firebase
+    FIREBASE_PROJECT_ID: str = ""
+    FIREBASE_PRIVATE_KEY: str = ""
+    FIREBASE_CLIENT_EMAIL: str = ""
+    FIREBASE_CREDENTIALS_JSON: str = ""
     
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000,*"

@@ -1,94 +1,194 @@
 """
-Supabase Database Connection and Client
+Firebase Database Connection and Client
 Provides async database operations for Myelin backend
 """
 
 from typing import Optional, Dict, Any, List
-from supabase import create_client, Client
+import firebase_admin
+from firebase_admin import credentials, firestore
 from .settings import settings
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Thread pool for running sync Firestore operations asynchronously
+_executor = ThreadPoolExecutor(max_workers=5)
+
 
 class Database:
-    """Supabase database client wrapper"""
+    """Firebase Firestore database client wrapper"""
     
     def __init__(self):
-        self.client: Optional[Client] = None
+        self.client: Optional[Any] = None
         self._initialize_client()
     
     def _initialize_client(self):
-        """Initialize Supabase client"""
+        """Initialize Firebase client"""
         try:
-            if not settings.SUPABASE_URL or not settings.SUPABASE_KEY:
-                logger.warning("Supabase credentials not configured. Database features will be disabled.")
+            if not settings.FIREBASE_CREDENTIALS_JSON:
+                logger.warning("Firebase credentials not configured. Database features will be disabled.")
                 return
             
-            self.client = create_client(
-                settings.SUPABASE_URL,
-                settings.SUPABASE_KEY
-            )
-            logger.info("✅ Supabase client initialized successfully")
+            # Initialize Firebase app only if not already initialized
+            try:
+                firebase_admin.get_app()
+            except ValueError:
+                cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_JSON)
+                firebase_admin.initialize_app(cred)
+            
+            self.client = firestore.client()
+            logger.info("✅ Firebase Firestore client initialized successfully")
         except Exception as e:
-            logger.error(f"❌ Failed to initialize Supabase client: {e}")
+            logger.error(f"❌ Failed to initialize Firebase client: {e}")
             self.client = None
     
     def is_connected(self) -> bool:
         """Check if database is connected"""
         return self.client is not None
     
+    async def _run_async(self, func, *args, **kwargs):
+        """Run a blocking function asynchronously"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(_executor, func, *args)
+
+    def _doc_to_dict(self, doc) -> Optional[Dict[str, Any]]:
+        """Convert a Firestore document snapshot to a dict with id."""
+        if not doc or not doc.exists:
+            return None
+        data = doc.to_dict() or {}
+        return {"id": doc.id, **data}
+    
     # Organizations
     async def create_organization(self, name: str, tier: str = "free") -> Dict[str, Any]:
         """Create a new organization"""
+        if not self.client:
+            return None
+        
         data = {
             "name": name,
             "tier": tier,
-            "is_active": True
+            "is_active": True,
+            "created_at": firestore.SERVER_TIMESTAMP
         }
-        response = self.client.table("organizations").insert(data).execute()
-        return response.data[0] if response.data else None
+        
+        try:
+            _, doc_ref = self.client.collection("organizations").add(data)
+            created_doc = doc_ref.get()
+            created = self._doc_to_dict(created_doc)
+            if created and created.get("created_at") is None:
+                created["created_at"] = datetime.utcnow()
+            return created
+        except Exception as e:
+            logger.error(f"Error creating organization: {e}")
+            return None
     
     async def get_organization(self, org_id: str) -> Optional[Dict[str, Any]]:
         """Get organization by ID"""
-        response = self.client.table("organizations").select("*").eq("id", org_id).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            doc = self.client.collection("organizations").document(org_id).get()
+            if doc.exists:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting organization: {e}")
+            return None
     
     async def get_organization_by_name(self, name: str) -> Optional[Dict[str, Any]]:
         """Get organization by name"""
-        response = self.client.table("organizations").select("*").eq("name", name).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            docs = self.client.collection("organizations").where("name", "==", name).stream()
+            for doc in docs:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting organization by name: {e}")
+            return None
     
     # Users
     async def create_user(self, email: str, password_hash: str, organization_id: str, 
                          full_name: Optional[str] = None, role: str = "developer") -> Dict[str, Any]:
         """Create a new user"""
+        if not self.client:
+            return None
+        
         data = {
             "email": email,
             "password_hash": password_hash,
             "organization_id": organization_id,
             "full_name": full_name,
             "role": role,
-            "is_active": True
+            "is_active": True,
+            "created_at": firestore.SERVER_TIMESTAMP
         }
-        response = self.client.table("users").insert(data).execute()
-        return response.data[0] if response.data else None
+        
+        try:
+            _, doc_ref = self.client.collection("users").add(data)
+            created_doc = doc_ref.get()
+            created = self._doc_to_dict(created_doc)
+            if created and created.get("created_at") is None:
+                created["created_at"] = datetime.utcnow()
+            return created
+        except Exception as e:
+            logger.error(f"Error creating user: {e}")
+            return None
     
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
-        response = self.client.table("users").select("*").eq("email", email).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            docs = self.client.collection("users").where("email", "==", email).stream()
+            for doc in docs:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user by email: {e}")
+            return None
     
     async def get_user(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get user by ID"""
-        response = self.client.table("users").select("*").eq("id", user_id).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            doc = self.client.collection("users").document(user_id).get()
+            if doc.exists:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user: {e}")
+            return None
     
     # API Keys
     async def create_api_key(self, organization_id: str, user_id: str, key_hash: str,
                             key_prefix: str, name: Optional[str] = None,
                             rate_limit_per_minute: int = 60) -> Dict[str, Any]:
         """Create a new API key"""
+        if not self.client:
+            return None
+        
         data = {
             "organization_id": organization_id,
             "user_id": user_id,
@@ -96,82 +196,254 @@ class Database:
             "key_prefix": key_prefix,
             "name": name,
             "is_active": True,
-            "rate_limit_per_minute": rate_limit_per_minute
+            "rate_limit_per_minute": rate_limit_per_minute,
+            "created_at": firestore.SERVER_TIMESTAMP
         }
-        response = self.client.table("api_keys").insert(data).execute()
-        return response.data[0] if response.data else None
+        
+        try:
+            _, doc_ref = self.client.collection("api_keys").add(data)
+            created_doc = doc_ref.get()
+            created = self._doc_to_dict(created_doc)
+            if created and created.get("created_at") is None:
+                created["created_at"] = datetime.utcnow()
+            return created
+        except Exception as e:
+            logger.error(f"Error creating API key: {e}")
+            return None
     
     async def get_api_key_by_hash(self, key_hash: str) -> Optional[Dict[str, Any]]:
         """Get API key by hash"""
-        response = self.client.table("api_keys").select("*").eq("key_hash", key_hash).eq("is_active", True).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            docs = self.client.collection("api_keys")\
+                .where("key_hash", "==", key_hash)\
+                .where("is_active", "==", True)\
+                .stream()
+            for doc in docs:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting API key by hash: {e}")
+            return None
     
     async def list_api_keys(self, organization_id: str) -> List[Dict[str, Any]]:
         """List all API keys for an organization"""
-        response = self.client.table("api_keys").select("*").eq("organization_id", organization_id).execute()
-        return response.data if response.data else []
+        if not self.client:
+            return []
+        
+        try:
+            docs = self.client.collection("api_keys")\
+                .where("organization_id", "==", organization_id)\
+                .stream()
+            
+            keys = []
+            for doc in docs:
+                keys.append({
+                    "id": doc.id,
+                    **doc.to_dict()
+                })
+            return keys
+        except Exception as e:
+            logger.error(f"Error listing API keys: {e}")
+            return []
     
     async def update_api_key_last_used(self, key_id: str):
         """Update last_used_at timestamp for API key"""
-        self.client.table("api_keys").update({"last_used_at": "now()"}).eq("id", key_id).execute()
+        if not self.client:
+            return
+        
+        try:
+            self.client.collection("api_keys").document(key_id).update({
+                "last_used_at": firestore.SERVER_TIMESTAMP
+            })
+        except Exception as e:
+            logger.error(f"Error updating API key last_used: {e}")
     
     async def revoke_api_key(self, key_id: str, organization_id: str):
         """Revoke an API key"""
-        self.client.table("api_keys").update({"is_active": False}).eq("id", key_id).eq("organization_id", organization_id).execute()
+        if not self.client:
+            return
+        
+        try:
+            self.client.collection("api_keys").document(key_id).update({
+                "is_active": False,
+                "updated_at": firestore.SERVER_TIMESTAMP
+            })
+        except Exception as e:
+            logger.error(f"Error revoking API key: {e}")
     
     # Custom Rules
     async def create_custom_rule(self, organization_id: str, rule_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a custom rule"""
+        if not self.client:
+            return None
+        
         data = {
             "organization_id": organization_id,
-            **rule_data
+            **rule_data,
+            "created_at": firestore.SERVER_TIMESTAMP
         }
-        response = self.client.table("custom_rules").insert(data).execute()
-        return response.data[0] if response.data else None
+        
+        try:
+            _, doc_ref = self.client.collection("custom_rules").add(data)
+            created_doc = doc_ref.get()
+            created = self._doc_to_dict(created_doc)
+            if created and created.get("created_at") is None:
+                created["created_at"] = datetime.utcnow()
+            return created
+        except Exception as e:
+            logger.error(f"Error creating custom rule: {e}")
+            return None
     
     async def get_custom_rule(self, rule_id: str, organization_id: str) -> Optional[Dict[str, Any]]:
         """Get a custom rule by ID"""
-        response = self.client.table("custom_rules").select("*").eq("id", rule_id).eq("organization_id", organization_id).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            docs = self.client.collection("custom_rules")\
+                .where("rule_id", "==", rule_id)\
+                .where("organization_id", "==", organization_id)\
+                .limit(1)\
+                .stream()
+            for doc in docs:
+                return self._doc_to_dict(doc)
+            return None
+        except Exception as e:
+            logger.error(f"Error getting custom rule: {e}")
+            return None
     
     async def list_custom_rules(self, organization_id: str, pillar: Optional[str] = None,
                                is_active: bool = True) -> List[Dict[str, Any]]:
         """List custom rules for an organization"""
-        query = self.client.table("custom_rules").select("*").eq("organization_id", organization_id)
+        if not self.client:
+            return []
         
-        if pillar:
-            query = query.eq("pillar", pillar)
-        if is_active is not None:
-            query = query.eq("is_active", is_active)
-        
-        response = query.execute()
-        return response.data if response.data else []
+        try:
+            query = self.client.collection("custom_rules")\
+                .where("organization_id", "==", organization_id)
+            
+            if pillar:
+                query = query.where("pillar", "==", pillar)
+            if is_active is not None:
+                query = query.where("is_active", "==", is_active)
+            
+            docs = query.stream()
+            rules = []
+            for doc in docs:
+                rules.append({
+                    "id": doc.id,
+                    **doc.to_dict()
+                })
+            return rules
+        except Exception as e:
+            logger.error(f"Error listing custom rules: {e}")
+            return []
     
     async def update_custom_rule(self, rule_id: str, organization_id: str, 
                                 update_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update a custom rule"""
-        response = self.client.table("custom_rules").update(update_data).eq("id", rule_id).eq("organization_id", organization_id).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        try:
+            docs = self.client.collection("custom_rules")\
+                .where("rule_id", "==", rule_id)\
+                .where("organization_id", "==", organization_id)\
+                .limit(1)\
+                .stream()
+
+            target_doc = None
+            for doc in docs:
+                target_doc = doc
+                break
+
+            if not target_doc:
+                return None
+
+            update_data["updated_at"] = firestore.SERVER_TIMESTAMP
+            self.client.collection("custom_rules").document(target_doc.id).update(update_data)
+            
+            doc = self.client.collection("custom_rules").document(target_doc.id).get()
+            if doc.exists:
+                return self._doc_to_dict(doc)
+            return None
+        except Exception as e:
+            logger.error(f"Error updating custom rule: {e}")
+            return None
     
     async def delete_custom_rule(self, rule_id: str, organization_id: str):
         """Delete a custom rule"""
-        self.client.table("custom_rules").delete().eq("id", rule_id).eq("organization_id", organization_id).execute()
+        if not self.client:
+            return
+        
+        try:
+            docs = self.client.collection("custom_rules")\
+                .where("rule_id", "==", rule_id)\
+                .where("organization_id", "==", organization_id)\
+                .limit(1)\
+                .stream()
+            for doc in docs:
+                self.client.collection("custom_rules").document(doc.id).delete()
+                break
+        except Exception as e:
+            logger.error(f"Error deleting custom rule: {e}")
     
     # Audit Logs
     async def create_audit_log(self, log_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create an audit log entry"""
-        response = self.client.table("audit_logs").insert(log_data).execute()
-        return response.data[0] if response.data else None
+        if not self.client:
+            return None
+        
+        data = {
+            **log_data,
+            "created_at": firestore.SERVER_TIMESTAMP
+        }
+        
+        try:
+            _, doc_ref = self.client.collection("audit_logs").add(data)
+            created_doc = doc_ref.get()
+            created = self._doc_to_dict(created_doc)
+            if created and created.get("created_at") is None:
+                created["created_at"] = datetime.utcnow()
+            return created
+        except Exception as e:
+            logger.error(f"Error creating audit log: {e}")
+            return None
     
     async def get_audit_logs(self, organization_id: str, limit: int = 100,
                             offset: int = 0) -> List[Dict[str, Any]]:
         """Get audit logs for an organization"""
-        response = self.client.table("audit_logs").select("*").eq("organization_id", organization_id).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
-        return response.data if response.data else []
+        if not self.client:
+            return []
+        
+        try:
+            query = self.client.collection("audit_logs")\
+                .where("organization_id", "==", organization_id)\
+                .order_by("created_at", direction=firestore.Query.DESCENDING)\
+                .offset(offset)\
+                .limit(limit)
+            
+            docs = query.stream()
+            logs = []
+            for doc in docs:
+                logs.append({
+                    "id": doc.id,
+                    **doc.to_dict()
+                })
+            return logs
+        except Exception as e:
+            logger.error(f"Error getting audit logs: {e}")
+            return []
     
     async def get_audit_stats(self, organization_id: str) -> Dict[str, Any]:
         """Get audit statistics for an organization"""
-        # This would require aggregation queries - simplified version
+        # Fetch logs for aggregation
         logs = await self.get_audit_logs(organization_id, limit=1000)
         
         total = len(logs)
@@ -190,13 +462,27 @@ class Database:
     # Rule Templates
     async def list_rule_templates(self, pillar: Optional[str] = None) -> List[Dict[str, Any]]:
         """List public rule templates"""
-        query = self.client.table("rule_templates").select("*").eq("is_public", True)
+        if not self.client:
+            return []
         
-        if pillar:
-            query = query.eq("pillar", pillar)
-        
-        response = query.execute()
-        return response.data if response.data else []
+        try:
+            query = self.client.collection("rule_templates")\
+                .where("is_public", "==", True)
+            
+            if pillar:
+                query = query.where("pillar", "==", pillar)
+            
+            docs = query.stream()
+            templates = []
+            for doc in docs:
+                templates.append({
+                    "id": doc.id,
+                    **doc.to_dict()
+                })
+            return templates
+        except Exception as e:
+            logger.error(f"Error listing rule templates: {e}")
+            return []
 
 
 # Global database instance
