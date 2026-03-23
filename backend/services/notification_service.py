@@ -67,7 +67,7 @@ class NotificationService:
             f"{verification_url}\n\n"
             "This link expires soon. If you did not sign up, you can safely ignore this email.\n"
         )
-        html_body = NotificationService._build_verification_html(greeting_name, verification_url)
+        html_body = _build_verification_html(greeting_name, verification_url)
 
         NotificationService._send_email(
             to_email=to_email,
@@ -96,7 +96,7 @@ class NotificationService:
                 "Your recent audit execution detected one or more flags.\n\n"
                 "Attached is a PDF version of the generated JSON report so you can review the details.\n"
             )
-            html_body = NotificationService._build_alert_html(audit_type)
+            html_body = _build_alert_html(audit_type)
             NotificationService._send_email(
                 to_email=to_email,
                 subject=subject,
@@ -169,10 +169,10 @@ class NotificationService:
 
         return found
 
-        @staticmethod
-        def _build_verification_html(full_name: str, verification_url: str) -> str:
-                """Build HTML content for account verification emails."""
-                return f"""
+    @staticmethod
+    def _build_verification_html(full_name: str, verification_url: str) -> str:
+        """Build HTML content for account verification emails."""
+        return f"""
 <html>
     <body style=\"font-family:Segoe UI, Arial, sans-serif; color:#1f2937; line-height:1.6;\">
         <h2 style=\"margin-bottom:8px;\">Verify your MYELIN account</h2>
@@ -188,11 +188,11 @@ class NotificationService:
 </html>
 """.strip()
 
-        @staticmethod
-        def _build_alert_html(audit_type: str) -> str:
-                """Build HTML content for flagged audit alert emails."""
-                safe_audit_type = str(audit_type).replace("<", "").replace(">", "")
-                return f"""
+    @staticmethod
+    def _build_alert_html(audit_type: str) -> str:
+        """Build HTML content for flagged audit alert emails."""
+        safe_audit_type = str(audit_type).replace("<", "").replace(">", "")
+        return f"""
 <html>
     <body style=\"font-family:Segoe UI, Arial, sans-serif; color:#1f2937; line-height:1.6;\">
         <h2 style=\"margin-bottom:8px; color:#b91c1c;\">MYELIN Alert: Flags detected</h2>
@@ -304,6 +304,39 @@ class NotificationService:
 
 
 notification_service = NotificationService()
+
+
+def _build_verification_html(full_name: str, verification_url: str) -> str:
+    """Build HTML content for account verification emails."""
+    return f"""
+<html>
+    <body style=\"font-family:Segoe UI, Arial, sans-serif; color:#1f2937; line-height:1.6;\">
+        <h2 style=\"margin-bottom:8px;\">Verify your MYELIN account</h2>
+        <p>Hi {full_name},</p>
+        <p>Thanks for signing up for MYELIN. Please verify your email address to activate your account.</p>
+        <p>
+            <a href=\"{verification_url}\" style=\"display:inline-block; background:#0f766e; color:white; padding:10px 16px; text-decoration:none; border-radius:6px;\">Verify Email</a>
+        </p>
+        <p>If the button does not work, open this URL directly:</p>
+        <p><a href=\"{verification_url}\">{verification_url}</a></p>
+        <p style=\"font-size:12px; color:#6b7280;\">If you did not sign up, you can ignore this email.</p>
+    </body>
+</html>
+""".strip()
+
+
+def _build_alert_html(audit_type: str) -> str:
+    """Build HTML content for flagged audit alert emails."""
+    safe_audit_type = str(audit_type).replace("<", "").replace(">", "")
+    return f"""
+<html>
+    <body style=\"font-family:Segoe UI, Arial, sans-serif; color:#1f2937; line-height:1.6;\">
+        <h2 style=\"margin-bottom:8px; color:#b91c1c;\">MYELIN Alert: Flags detected</h2>
+        <p>The latest <strong>{safe_audit_type}</strong> audit raised one or more flags.</p>
+        <p>Please review the attached PDF report for details, impacted rules, and risk indicators.</p>
+    </body>
+</html>
+""".strip()
 
 
 def get_notification_service() -> NotificationService:

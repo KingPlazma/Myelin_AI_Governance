@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from backend.config.settings import settings
 from backend.config.database import get_db
-from backend.models.user import UserCreate
+from backend.models.user import UserCreate, UserRole
 from backend.models.api_key import APIKeyCreate
 from backend.services.auth_service import get_auth_service
 
@@ -45,13 +45,13 @@ async def create_demo_api_key(payload: DemoKeyRequest):
     db = get_db()
 
     user, organization = await auth_service.register_user(
-        UserCreate(
-            email=email,
-            password=password,
-            full_name=payload.full_name,
-            organization_name=org_name,
-            role="developer"
-        )
+        UserCreate.model_validate({
+            "email": email,
+            "password": password,
+            "full_name": payload.full_name,
+            "organization_name": org_name,
+            "role": UserRole.DEVELOPER,
+        })
     )
 
     # Mark demo accounts as verified so demo keys can be used immediately.
@@ -60,7 +60,10 @@ async def create_demo_api_key(payload: DemoKeyRequest):
     api_key, api_key_record = await auth_service.create_api_key(
         user_id=user["id"],
         organization_id=organization["id"],
-        key_data=APIKeyCreate(name="Demo Web Key")
+        key_data=APIKeyCreate.model_validate({
+            "name": "Demo Web Key",
+            "expires_in_days": None,
+        })
     )
 
     return {
