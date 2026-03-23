@@ -55,6 +55,21 @@ You should see the interactive API documentation!
 
 ---
 
+## 🤖 Agent Email Alerts (Verified Users)
+
+The Myelin agent workflow now sends flagged audit emails too.
+
+How recipient email is resolved:
+1. Preferred: from verified backend user via `X-API-Key` or `Authorization: Bearer <key>`.
+2. Optional fallback (disabled by default): `X-User-Email` header or `AGENT_ALERT_EMAIL` env.
+
+Set agent environment values from `agent/.env.example` before running proxy.
+
+When no flags are raised, no email is sent.
+When flags are raised, the user gets a PDF attachment built from the JSON audit report.
+
+---
+
 ## 🎨 Step 2: Run the Frontend
 
 ### Option A: Simple HTTP Server (Recommended)

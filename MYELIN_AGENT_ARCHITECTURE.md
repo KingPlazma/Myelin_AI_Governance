@@ -181,6 +181,19 @@ print(response.choices[0].message.content) # Output: "[REDACTED BY MYELIN AGENT]
 
 ## 6. Next Steps & Summary
 
+## 7. Agent Email Alerts (Implemented)
+
+Myelin Sentinel now supports conditional email notifications in agent mode:
+
+- Trigger point: inline proxy audits inside `POST /v1/chat/completions`.
+- Condition: email is sent only when a prompt or response audit raises flags.
+- Attachment: flagged JSON audit report is converted to PDF and attached.
+- Recipient resolution:
+  - Preferred: verified user email resolved from backend API key.
+  - Optional fallback: request email header or static env email (off by default).
+
+This keeps agent behavior aligned with API behavior for notification policy.
+
 To achieve this in 5 days:
 1. **Initialize the Agent Wrapper codebase** alongside the existing `orchestrator` folder.
 2. **Setup LiteLLM or direct FastAPI routing** to handle proxying OpenAI/Anthropic/Ollama request shapes seamlessly.

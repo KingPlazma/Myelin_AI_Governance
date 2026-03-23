@@ -409,22 +409,13 @@ async function generateApiKey() {
   try {
     showNotification('Registering user and generating API key...', 'info');
 
-    // Generate random email and org name
-    const timestamp = Date.now();
-    const email = `user${timestamp}@example.com`;
-    const orgName = `Organization ${timestamp}`;
-
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/public/demo-api-key`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email: email,
-        password: 'SecurePass123!',
-        organization_name: orgName,
-        full_name: 'Myelin User',
-        role: 'developer'
+        full_name: 'Myelin User'
       })
     });
 
@@ -440,7 +431,7 @@ async function generateApiKey() {
     }
 
     const data = await response.json();
-    currentApiKey = data.access_token;
+  currentApiKey = data.api_key;
 
     // Store API key
     localStorage.setItem('myelin_api_key', currentApiKey);
@@ -569,27 +560,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ============================================================================
-   HELPER FUNCTIONS FOR TESTING
-   ============================================================================ */
-
-// Make these available in console for testing
-window.myelinAPI = {
-  generateApiKey,
-  testBackendConnection,
-  viewDocumentation,
-  getCurrentApiKey: () => currentApiKey,
-  clearApiKey: () => {
-    localStorage.removeItem('myelin_api_key');
-    currentApiKey = null;
-    showNotification('API key cleared', 'info');
-  }
-};
-
-console.log('%cMyelin API Helper', 'color: #667eea; font-size: 16px; font-weight: bold;');
-console.log('Available commands:');
-console.log('  myelinAPI.generateApiKey() - Generate new API key');
-console.log('  myelinAPI.testBackendConnection() - Test backend');
-console.log('  myelinAPI.getCurrentApiKey() - Get current API key');
-console.log('  myelinAPI.clearApiKey() - Clear stored API key');
-console.log('  myelinAPI.viewDocumentation() - Open API docs');

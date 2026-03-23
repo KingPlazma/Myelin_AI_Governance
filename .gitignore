@@ -8,6 +8,8 @@ __pycache__/
 .venv
 venv/
 env/
+serviceAccountKey.json
+**/serviceAccountKey.json
 
 # Ignore Markdown Reports (as requested)
 SOLUTION_SUMMARY.md

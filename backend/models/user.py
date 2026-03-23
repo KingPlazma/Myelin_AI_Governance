@@ -58,6 +58,7 @@ class UserResponse(BaseModel):
     """User response model (without sensitive data)"""
     id: str
     email: str
+    email_verified: bool = False
     full_name: Optional[str]
     role: str
     organization_id: str

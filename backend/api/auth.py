@@ -5,6 +5,7 @@ Handles user registration, login, and API key management
 
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from typing import List
+from pydantic import BaseModel, EmailStr
 
 from backend.models.user import UserCreate, UserLogin, UserResponse, UserWithToken
 from backend.models.api_key import APIKeyCreate, APIKeyResponse, APIKeyWithSecret, APIKeyUpdate
@@ -13,6 +14,11 @@ from backend.middleware.auth_middleware import validate_api_key, get_current_use
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 api_keys_router = APIRouter(prefix="/api-keys", tags=["API Keys"])
+
+
+class ResendVerificationRequest(BaseModel):
+    """Request model for verification email resend."""
+    email: EmailStr
 
 
 # ============================================================================
@@ -41,6 +47,7 @@ async def register(user_data: UserCreate):
     return UserWithToken(
         id=user["id"],
         email=user["email"],
+        email_verified=user.get("email_verified", False),
         full_name=user.get("full_name"),
         role=user["role"],
         organization_id=user["organization_id"],
@@ -89,6 +96,7 @@ async def login(login_data: UserLogin):
     return UserWithToken(
         id=user["id"],
         email=user["email"],
+        email_verified=user.get("email_verified", False),
         full_name=user.get("full_name"),
         role=user["role"],
         organization_id=user["organization_id"],
@@ -111,12 +119,38 @@ async def get_current_user_info(request: Request, auth_context = Depends(validat
     return UserResponse(
         id=user["id"],
         email=user["email"],
+        email_verified=user.get("email_verified", False),
         full_name=user.get("full_name"),
         role=user["role"],
         organization_id=user["organization_id"],
         is_active=user["is_active"],
         created_at=user["created_at"]
     )
+
+
+@router.get("/verify-email")
+async def verify_email(token: str):
+    """
+    Verify user email using a token sent to the registered email address.
+    """
+    auth_service = get_auth_service()
+    user = await auth_service.verify_user_email(token)
+
+    return {
+        "message": "Email verified successfully",
+        "user_id": user["id"],
+        "email": user["email"],
+        "email_verified": user.get("email_verified", True)
+    }
+
+
+@router.post("/resend-verification")
+async def resend_verification_email(payload: ResendVerificationRequest):
+    """
+    Resend email verification link for users who have not verified yet.
+    """
+    auth_service = get_auth_service()
+    return await auth_service.resend_verification_email(str(payload.email))
 
 
 # ============================================================================

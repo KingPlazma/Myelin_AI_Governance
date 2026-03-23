@@ -1,0 +1,71 @@
+"""
+Public-facing utility endpoints for frontend demo flows.
+Sensitive provisioning logic is handled server-side.
+"""
+
+import secrets
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, Field
+
+from backend.config.settings import settings
+from backend.config.database import get_db
+from backend.models.user import UserCreate
+from backend.models.api_key import APIKeyCreate
+from backend.services.auth_service import get_auth_service
+
+router = APIRouter(prefix="/public", tags=["Public"])
+
+
+class DemoKeyRequest(BaseModel):
+    """Request model for demo API key provisioning."""
+    full_name: Optional[str] = Field(default="Myelin Demo User")
+    organization_name: Optional[str] = Field(default=None)
+
+
+@router.post("/demo-api-key")
+async def create_demo_api_key(payload: DemoKeyRequest):
+    """
+    Create a demo user and return an API key from server-side logic.
+    This avoids exposing registration internals in client-side code.
+    """
+    if not settings.PUBLIC_DEMO_KEY_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo key provisioning is disabled"
+        )
+
+    suffix = secrets.token_hex(4)
+    email = f"demo_{suffix}@example.com"
+    password = secrets.token_urlsafe(18) + "A1!"
+    org_name = payload.organization_name or f"Demo Org {suffix}"
+
+    auth_service = get_auth_service()
+    db = get_db()
+
+    user, organization = await auth_service.register_user(
+        UserCreate(
+            email=email,
+            password=password,
+            full_name=payload.full_name,
+            organization_name=org_name,
+            role="developer"
+        )
+    )
+
+    # Mark demo accounts as verified so demo keys can be used immediately.
+    await db.mark_user_email_verified(user["id"])
+
+    api_key, api_key_record = await auth_service.create_api_key(
+        user_id=user["id"],
+        organization_id=organization["id"],
+        key_data=APIKeyCreate(name="Demo Web Key")
+    )
+
+    return {
+        "api_key": api_key,
+        "key_prefix": api_key_record["key_prefix"],
+        "organization_id": organization["id"],
+        "email": user["email"]
+    }

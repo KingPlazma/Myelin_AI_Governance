@@ -52,6 +52,20 @@ class Settings(BaseSettings):
     
     # Logging
     LOG_LEVEL: str = "INFO"
+
+    # Email Notifications
+    EMAIL_ENABLED: bool = False
+    EMAIL_SMTP_HOST: str = ""
+    EMAIL_SMTP_PORT: int = 587
+    EMAIL_SMTP_USERNAME: str = ""
+    EMAIL_SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = ""
+    EMAIL_USE_TLS: bool = True
+    EMAIL_VERIFICATION_BASE_URL: str = "http://localhost:8000/api/v1/auth/verify-email"
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
+
+    # Public frontend demo controls
+    PUBLIC_DEMO_KEY_ENABLED: bool = False
     
     class Config:
         env_file = ".env"

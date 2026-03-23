@@ -11,6 +11,7 @@ import uvicorn
 import sys
 import os
 import logging
+import asyncio
 
 # Add paths
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,11 +20,13 @@ from backend.config.settings import settings
 from backend.config.database import get_db
 from backend.enhanced_orchestrator import get_enhanced_orchestrator
 from backend.middleware.auth_middleware import validate_api_key, get_api_key_from_request
+from backend.services.notification_service import get_notification_service
 
 # Import routers
 from backend.api.auth import router as auth_router, api_keys_router
 from backend.api.rules import router as rules_router
 from backend.api.audit import router as audit_router
+from backend.api.public import router as public_router
 
 # Setup logging
 logging.basicConfig(
@@ -52,6 +55,23 @@ app.add_middleware(
 
 # Global orchestrator instance
 orchestrator = None
+
+
+def _schedule_flagged_report_email(user_email: Optional[str], audit_type: str, result: Dict[str, Any]):
+    """Schedule flagged-report email delivery in the background if needed."""
+    if not user_email:
+        return
+
+    notification_service = get_notification_service()
+    if not notification_service.has_flags(result):
+        return
+
+    asyncio.create_task(asyncio.to_thread(
+        notification_service.send_audit_report_if_flagged,
+        user_email,
+        audit_type,
+        result
+    ))
 
 
 @app.on_event("startup")
@@ -106,6 +126,7 @@ app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(api_keys_router, prefix=settings.API_V1_PREFIX)
 app.include_router(rules_router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit_router, prefix=settings.API_V1_PREFIX)
+app.include_router(public_router, prefix=settings.API_V1_PREFIX)
 
 
 # ============================================================================
@@ -190,6 +211,11 @@ async def audit_conversation(request_data: ConversationAuditRequest, request: Re
                     api_key_id=auth_context["api_key"]["id"]
                 )
                 result["custom_rules_enabled"] = True
+                _schedule_flagged_report_email(
+                    user_email=auth_context["user"].get("email"),
+                    audit_type="conversation",
+                    result=result
+                )
                 return result
         
         # Unauthenticated request - default rules only
@@ -230,6 +256,11 @@ async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request):
                     api_key_id=auth_context["api_key"]["id"]
                 )
                 result["custom_rules_enabled"] = True
+                _schedule_flagged_report_email(
+                    user_email=auth_context["user"].get("email"),
+                    audit_type="toxicity",
+                    result=result
+                )
                 return result
         
         result = orchestrator.audit_toxicity(
@@ -260,8 +291,17 @@ async def audit_governance(request_data: GovernanceAuditRequest, request: Reques
             auth_context = await auth_service.validate_api_key(api_key)
             
             if auth_context:
-                # Similar implementation as toxicity
-                pass
+                result = orchestrator.audit_governance(
+                    user_input=request_data.user_input,
+                    bot_response=request_data.bot_response
+                )
+                result["custom_rules_enabled"] = True
+                _schedule_flagged_report_email(
+                    user_email=auth_context["user"].get("email"),
+                    audit_type="governance",
+                    result=result
+                )
+                return result
         
         result = orchestrator.audit_governance(
             user_input=request_data.user_input,
@@ -291,8 +331,17 @@ async def audit_bias(request_data: BiasAuditRequest, request: Request):
             auth_context = await auth_service.validate_api_key(api_key)
             
             if auth_context:
-                # Similar implementation as toxicity
-                pass
+                result = orchestrator.audit_bias(
+                    user_input=request_data.user_input,
+                    bot_response=request_data.bot_response
+                )
+                result["custom_rules_enabled"] = True
+                _schedule_flagged_report_email(
+                    user_email=auth_context["user"].get("email"),
+                    audit_type="bias",
+                    result=result
+                )
+                return result
         
         result = orchestrator.audit_bias(
             user_input=request_data.user_input,
@@ -334,6 +383,11 @@ async def batch_audit_conversations(requests: List[ConversationAuditRequest], re
                     source_text=req.source_text,
                     organization_id=auth_context["organization"]["id"],
                     api_key_id=auth_context["api_key"]["id"]
+                )
+                _schedule_flagged_report_email(
+                    user_email=auth_context["user"].get("email"),
+                    audit_type="batch_conversation",
+                    result=result
                 )
             else:
                 result = orchestrator.audit_conversation(

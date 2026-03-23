@@ -120,7 +120,7 @@ class Database:
             return None
     
     # Users
-    async def create_user(self, email: str, password_hash: str, organization_id: str, 
+    async def create_user(self, email: str, password_hash: str, organization_id: str,
                          full_name: Optional[str] = None, role: str = "developer") -> Dict[str, Any]:
         """Create a new user"""
         if not self.client:
@@ -132,6 +132,10 @@ class Database:
             "organization_id": organization_id,
             "full_name": full_name,
             "role": role,
+            "email_verified": False,
+            "email_verification_token_hash": None,
+            "email_verification_expires_at": None,
+            "email_verified_at": None,
             "is_active": True,
             "created_at": firestore.SERVER_TIMESTAMP
         }
@@ -146,6 +150,62 @@ class Database:
         except Exception as e:
             logger.error(f"Error creating user: {e}")
             return None
+
+    async def set_user_email_verification_token(self, user_id: str, token_hash: str,
+                                                expires_at: datetime) -> bool:
+        """Store email verification token hash and expiration for a user."""
+        if not self.client:
+            return False
+
+        try:
+            self.client.collection("users").document(user_id).update({
+                "email_verification_token_hash": token_hash,
+                "email_verification_expires_at": expires_at,
+                "email_verified": False,
+                "updated_at": firestore.SERVER_TIMESTAMP
+            })
+            return True
+        except Exception as e:
+            logger.error(f"Error setting email verification token: {e}")
+            return False
+
+    async def get_user_by_email_verification_token_hash(self, token_hash: str) -> Optional[Dict[str, Any]]:
+        """Get user by email verification token hash."""
+        if not self.client:
+            return None
+
+        try:
+            docs = self.client.collection("users")\
+                .where("email_verification_token_hash", "==", token_hash)\
+                .limit(1)\
+                .stream()
+            for doc in docs:
+                return {
+                    "id": doc.id,
+                    **doc.to_dict()
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Error getting user by verification token hash: {e}")
+            return None
+
+    async def mark_user_email_verified(self, user_id: str) -> bool:
+        """Mark user's email as verified and clear verification token fields."""
+        if not self.client:
+            return False
+
+        try:
+            self.client.collection("users").document(user_id).update({
+                "email_verified": True,
+                "email_verified_at": firestore.SERVER_TIMESTAMP,
+                "email_verification_token_hash": None,
+                "email_verification_expires_at": None,
+                "updated_at": firestore.SERVER_TIMESTAMP
+            })
+            return True
+        except Exception as e:
+            logger.error(f"Error marking user email verified: {e}")
+            return False
     
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""

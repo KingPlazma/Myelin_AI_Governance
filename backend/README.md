@@ -158,6 +158,11 @@ This installs:
 cp .env.example .env
 ```
 
+Security note:
+- Keep `serviceAccountKey.json` only on your local machine.
+- Do not commit `serviceAccountKey.json` to git.
+- Use `serviceAccountKey.example.json` as a template.
+
 ### Step 2: Edit `.env` File
 
 Open `backend/.env` and fill in your values:
@@ -171,10 +176,32 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 # Security (generate a random secret key)
 SECRET_KEY=your-secret-key-here
 
+# Firebase (local credential file)
+FIREBASE_CREDENTIALS_JSON=../serviceAccountKey.json
+
 # API Configuration (optional, defaults are fine)
 API_PORT=8000
 DEBUG=False
+
+# Email System (required for verification + flagged report emails)
+EMAIL_ENABLED=True
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USERNAME=your-email@gmail.com
+EMAIL_SMTP_PASSWORD=your-app-password
+EMAIL_FROM=your-email@gmail.com
+EMAIL_USE_TLS=True
+EMAIL_VERIFICATION_BASE_URL=http://localhost:8000/api/v1/auth/verify-email
+EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS=24
+
+# Frontend demo key provisioning (server-side)
+PUBLIC_DEMO_KEY_ENABLED=False
 ```
+
+Frontend key provisioning note:
+- The web UI requests demo API keys via server endpoint `POST /api/v1/public/demo-api-key`.
+- Set `PUBLIC_DEMO_KEY_ENABLED=True` only when you need public demo key generation.
+- Keep it `False` for production deployments.
 
 ### Step 3: Generate Secret Key
 
@@ -257,6 +284,26 @@ curl -X POST "http://localhost:8000/api/v1/auth/register" \
   "access_token": "myelin_sk_abc123...",
   "token_type": "bearer"
 }
+```
+
+### 1.1 Verify Email and Resend Link
+
+After registration, the user receives a verification email.
+
+Open the link from email:
+
+```text
+GET /api/v1/auth/verify-email?token=<verification-token>
+```
+
+If the token expires or mail was missed, resend verification email:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/resend-verification" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@acme.com"
+  }'
 ```
 
 **Save the `access_token`!** This is your API key.
