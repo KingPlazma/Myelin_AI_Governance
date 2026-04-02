@@ -11,6 +11,8 @@ from backend.models.user import UserCreate, UserLogin, UserResponse, UserWithTok
 from backend.models.api_key import APIKeyCreate, APIKeyResponse, APIKeyWithSecret, APIKeyUpdate
 from backend.services.auth_service import get_auth_service
 from backend.middleware.auth_middleware import validate_api_key, get_current_user, get_current_organization
+from backend.middleware.rate_limiter import limiter, LIMIT_AUTH
+from backend.services.jwt_service import get_jwt_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 api_keys_router = APIRouter(prefix="/api-keys", tags=["API Keys"])
@@ -26,7 +28,8 @@ class ResendVerificationRequest(BaseModel):
 # ============================================================================
 
 @router.post("/register", response_model=UserWithToken, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate):
+@limiter.limit(LIMIT_AUTH)
+async def register(user_data: UserCreate, request: Request):
     """
     Register a new user and organization
     
@@ -59,7 +62,8 @@ async def register(user_data: UserCreate):
 
 
 @router.post("/login", response_model=UserWithToken)
-async def login(login_data: UserLogin):
+@limiter.limit(LIMIT_AUTH)
+async def login(login_data: UserLogin, request: Request):
     """
     Login with email and password
     
@@ -145,7 +149,8 @@ async def verify_email(token: str):
 
 
 @router.post("/resend-verification")
-async def resend_verification_email(payload: ResendVerificationRequest):
+@limiter.limit("5/minute")
+async def resend_verification_email(payload: ResendVerificationRequest, request: Request):
     """
     Resend email verification link for users who have not verified yet.
     """
@@ -154,8 +159,79 @@ async def resend_verification_email(payload: ResendVerificationRequest):
 
 
 # ============================================================================
+# JWT TOKEN ENDPOINTS
+# ============================================================================
+
+class TokenRefreshRequest(BaseModel):
+    """Request model for JWT token refresh."""
+    refresh_token: str
+
+
+class TokenResponse(BaseModel):
+    """Response model for JWT token pair."""
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int   # access token TTL in seconds
+
+
+@router.post("/token/login", response_model=TokenResponse, tags=["JWT Authentication"])
+@limiter.limit(LIMIT_AUTH)
+async def login_jwt(login_data: "UserLogin", request: Request):
+    """
+    Login and receive a JWT access + refresh token pair.
+
+    - **access_token**: short-lived (60 min). Use as Bearer token for API calls.
+    - **refresh_token**: long-lived (7 days). Use with /auth/token/refresh.
+    - Never store either token in LocalStorage — use httpOnly cookies.
+    """
+    from backend.models.user import UserLogin as _UserLogin
+    auth_service = get_auth_service()
+    jwt_service = get_jwt_service()
+
+    user = await auth_service.login_user(login_data)
+
+    return TokenResponse(
+        access_token=jwt_service.create_access_token(user),
+        refresh_token=jwt_service.create_refresh_token(user),
+        token_type="bearer",
+        expires_in=60 * 60,   # 60 minutes in seconds
+    )
+
+
+@router.post("/token/refresh", response_model=TokenResponse, tags=["JWT Authentication"])
+@limiter.limit("10/minute")
+async def refresh_jwt(payload: TokenRefreshRequest, request: Request):
+    """
+    Exchange a valid refresh token for a new access + refresh token pair.
+
+    The old refresh token is invalidated on receipt of the new one.
+    If the refresh token has expired, the user must log in again.
+    """
+    jwt_service = get_jwt_service()
+
+    # Decode refresh token to get user identity (raises on invalid/expired)
+    claims = jwt_service.verify_refresh_token(payload.refresh_token)
+
+    # Re-fetch user from DB to get current state (role changes, deactivation)
+    auth_service = get_auth_service()
+    from backend.config.database import get_db
+    db = get_db()
+    user = await db.get_user(claims["sub"])
+    if not user or not user.get("is_active"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account not found or deactivated.",
+        )
+
+    tokens = jwt_service.rotate_tokens(payload.refresh_token, user)
+    return TokenResponse(**tokens)
+
+
+# ============================================================================
 # API KEY MANAGEMENT ENDPOINTS
 # ============================================================================
+
 
 @api_keys_router.post("", response_model=APIKeyWithSecret, status_code=status.HTTP_201_CREATED)
 async def create_api_key(

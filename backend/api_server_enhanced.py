@@ -5,6 +5,7 @@ FastAPI server integrating authentication, custom rules, and enhanced auditing
 
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uvicorn
@@ -12,6 +13,8 @@ import sys
 import os
 import logging
 import asyncio
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 # Add paths
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,6 +23,22 @@ from backend.config.settings import settings
 from backend.config.database import get_db
 from backend.enhanced_orchestrator import get_enhanced_orchestrator
 from backend.middleware.auth_middleware import validate_api_key, get_api_key_from_request
+from backend.middleware.security_middleware import (
+    CloudflareRealIPMiddleware,
+    PayloadSizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
+from backend.middleware.rate_limiter import (
+    limiter,
+    rate_limit_exceeded_handler,
+    LIMIT_AUDIT,
+    LIMIT_AUTH,
+    LIMIT_BATCH,
+    LIMIT_DEFAULT,
+)
+from backend.middleware.bot_detection import BotDetectionMiddleware
+from backend.middleware.input_sanitizer import RequestSanitizerMiddleware
+from backend.middleware.anomaly_monitor import AnomalyMonitorMiddleware
 from backend.services.notification_service import get_notification_service
 
 # Import routers
@@ -40,17 +59,83 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="AI Governance and Alignment Auditor with Custom Rules Support",
     version=settings.APP_VERSION,
-    docs_url="/docs",
-    redoc_url="/redoc"
+    docs_url="/docs" if settings.DEBUG else None,   # hide docs in production
+    redoc_url="/redoc" if settings.DEBUG else None,
 )
 
-# CORS middleware
+# ============================================================================
+# SECURITY MIDDLEWARE STACK
+# Middleware is applied in REVERSE registration order by Starlette, so the
+# first middleware registered is the OUTERMOST layer (runs first on request,
+# last on response). Stack order here, outermost -> innermost:
+#
+#   1. CloudflareRealIPMiddleware  — rewrite client IP from CF-Connecting-IP
+#   2. TrustedHostMiddleware       — reject invalid Host headers
+#   3. CORSMiddleware              — enforce origin policy
+#   4. PayloadSizeLimitMiddleware  — reject oversized bodies
+#   5. SecurityHeadersMiddleware   — add OWASP headers to every response
+#   6. slowapi (via state)         — per-route rate limiting
+# ============================================================================
+
+# --- slowapi limiter state (must be set before any route decorator runs) ---
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# 1. Cloudflare Real-IP (outermost — must run before rate limiter key lookup)
+app.add_middleware(
+    CloudflareRealIPMiddleware,
+    cloudflare_enabled=settings.CLOUDFLARE_ENABLED,
+)
+
+# 2. Trusted Host — reject requests with forged/unexpected Host headers
+#    IMPORTANT: add your production domain to TRUSTED_HOSTS in .env
+#    e.g. TRUSTED_HOSTS="api.myelin.com,localhost,127.0.0.1"
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=settings.get_trusted_hosts(),
+)
+
+# 3. CORS — restrict cross-origin access
+#    NEVER use allow_origins=["*"] with allow_credentials=True — it is
+#    both insecure and rejected by all modern browsers.
+#    When behind Cloudflare, the Origin header is preserved as-is so
+#    exact domain matching works correctly.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=settings.get_cors_allow_methods(),
+    allow_headers=settings.get_cors_allow_headers(),
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"],
+    max_age=600,   # preflight cache 10 min
+)
+
+# 4. Payload size limit — prevent OOM from massive JSON bodies
+app.add_middleware(
+    PayloadSizeLimitMiddleware,
+    max_body_bytes=settings.MAX_REQUEST_BODY_BYTES,
+)
+
+# 5. Security headers — OWASP hardening on every response
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 6. Bot detection — blocks scrapers, scanners, known bad UAs, honeypot hits
+app.add_middleware(
+    BotDetectionMiddleware,
+    block_threshold=settings.BOT_BLOCK_THRESHOLD,
+    dry_run=settings.BOT_DRY_RUN,
+)
+
+# 7. Input sanitizer — strips XSS, CSS injection, SQL fragments from JSON bodies
+app.add_middleware(
+    RequestSanitizerMiddleware,
+    enabled=settings.INPUT_SANITIZER_ENABLED,
+)
+
+# 8. Anomaly monitor — tracks per-IP error patterns, blocks brute-force / scanners
+app.add_middleware(
+    AnomalyMonitorMiddleware,
+    enabled=settings.ANOMALY_MONITOR_ENABLED,
 )
 
 # Global orchestrator instance
@@ -177,6 +262,7 @@ async def health_check():
 # ============================================================================
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/conversation", tags=["Comprehensive Audit"])
+@limiter.limit(LIMIT_AUDIT)
 async def audit_conversation(request_data: ConversationAuditRequest, request: Request):
     """
     Run comprehensive audit on a conversation (all applicable pillars)
@@ -233,6 +319,7 @@ async def audit_conversation(request_data: ConversationAuditRequest, request: Re
 
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/toxicity", tags=["Toxicity Pillar"])
+@limiter.limit(LIMIT_AUDIT)
 async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request):
     """
     Run toxicity audit on conversation
@@ -275,6 +362,7 @@ async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request):
 
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/governance", tags=["Governance Pillar"])
+@limiter.limit(LIMIT_AUDIT)
 async def audit_governance(request_data: GovernanceAuditRequest, request: Request):
     """
     Run governance compliance audit
@@ -315,6 +403,7 @@ async def audit_governance(request_data: GovernanceAuditRequest, request: Reques
 
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/bias", tags=["Bias Pillar"])
+@limiter.limit(LIMIT_AUDIT)
 async def audit_bias(request_data: BiasAuditRequest, request: Request):
     """
     Run bias detection audit
@@ -359,6 +448,7 @@ async def audit_bias(request_data: BiasAuditRequest, request: Request):
 # ============================================================================
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/batch/conversations", tags=["Batch Operations"])
+@limiter.limit(LIMIT_BATCH)
 async def batch_audit_conversations(requests: List[ConversationAuditRequest], request: Request):
     """
     Run batch conversation audits
@@ -415,18 +505,25 @@ if __name__ == "__main__":
     print(f" {settings.APP_NAME} ".center(80, "="))
     print("="*80)
     print(f"\nStarting server on http://{settings.API_HOST}:{settings.API_PORT}")
-    print(f"API Documentation: http://localhost:{settings.API_PORT}/docs")
-    print(f"ReDoc: http://localhost:{settings.API_PORT}/redoc")
-    print(f"\nFeatures:")
-    print(f"   - 100+ Default Rules across 5 pillars")
-    print(f"   - Custom Rules per Organization")
-    print(f"   - API Key Authentication")
-    print(f"   - Audit Logging & Statistics\n")
-    
+    print(f"API Documentation: http://localhost:{settings.API_PORT}/docs (DEBUG only)")
+    print(f"\nSecurity layers active:")
+    print(f"   ✓ Cloudflare real-IP extraction (CLOUDFLARE_ENABLED={settings.CLOUDFLARE_ENABLED})")
+    print(f"   ✓ Trusted Host protection ({settings.TRUSTED_HOSTS})")
+    print(f"   ✓ CORS restricted to: {settings.CORS_ORIGINS}")
+    print(f"   ✓ Payload size limit: {settings.MAX_REQUEST_BODY_BYTES // 1024} KB")
+    print(f"   ✓ Rate limits — Audit:{settings.RATE_LIMIT_AUDIT} | Auth:{settings.RATE_LIMIT_AUTH} | Batch:{settings.RATE_LIMIT_BATCH}")
+    print(f"   ✓ OWASP security headers\n")
+
+    # Bind to 127.0.0.1 in production so only NGINX/Cloudflare Tunnel can
+    # reach Uvicorn directly — never expose Uvicorn to 0.0.0.0 in production.
+    host = settings.API_HOST if settings.DEBUG else "127.0.0.1"
+
     uvicorn.run(
         "api_server_enhanced:app",
-        host=settings.API_HOST,
+        host=host,
         port=settings.API_PORT,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
+        log_level=settings.LOG_LEVEL.lower(),
+        # Limit keep-alive to reduce Slowloris attack surface
+        timeout_keep_alive=30,
     )

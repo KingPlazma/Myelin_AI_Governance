@@ -17,6 +17,10 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 email-validator==2.3.0
 
+# Rate Limiting (Phase 1 Security Hardening)
+slowapi==0.1.9
+limits==3.9.0
+
 # HTTP & Async
 httpx==0.26.0
 aiofiles==23.2.1

@@ -6,11 +6,14 @@ import time
 import logging
 import asyncio
 from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any, Union
 import json
 from datetime import datetime
+from slowapi.errors import RateLimitExceeded
 
 from agent_core import get_agent_core
 
@@ -19,6 +22,26 @@ base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if base_path not in sys.path:
     sys.path.append(base_path)
 
+# Import shared security middleware from backend
+try:
+    from backend.middleware.security_middleware import (
+        CloudflareRealIPMiddleware,
+        PayloadSizeLimitMiddleware,
+        SecurityHeadersMiddleware,
+    )
+    from backend.middleware.rate_limiter import (
+        limiter,
+        rate_limit_exceeded_handler,
+        LIMIT_AUDIT,
+    )
+    _BACKEND_MW_AVAILABLE = True
+except ImportError:
+    _BACKEND_MW_AVAILABLE = False
+    logging.getLogger("MyelinProxyAgent").warning(
+        "Backend middleware not found — security layers disabled. "
+        "Run from the project root so backend/ is on PYTHONPATH."
+    )
+
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MyelinProxyAgent")
@@ -26,8 +49,73 @@ logger = logging.getLogger("MyelinProxyAgent")
 app = FastAPI(
     title="Myelin Sentinel Agent Proxy",
     description="Drop-in 24/7 AI Governance Agent",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url=None,    # disabled in production (no interactive docs on proxy)
+    redoc_url=None,
 )
+
+# ---------------------------------------------------------------------------
+# Proxy security configuration (env vars with safe defaults)
+# ---------------------------------------------------------------------------
+# Comma-separated trusted hostnames (same pattern as backend settings)
+PROXY_TRUSTED_HOSTS: str = os.getenv(
+    "PROXY_TRUSTED_HOSTS", "localhost,127.0.0.1"
+)
+_TRUSTED_HOST_LIST = [h.strip() for h in PROXY_TRUSTED_HOSTS.split(",") if h.strip()]
+
+# Allowed CORS origins for the proxy (who can call the OpenAI-compat endpoint)
+PROXY_CORS_ORIGINS: str = os.getenv(
+    "PROXY_CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+)
+_CORS_ORIGIN_LIST = [o.strip() for o in PROXY_CORS_ORIGINS.split(",") if o.strip()]
+
+# Max payload: 2 MB (LLM messages are text — anything bigger is suspicious)
+PROXY_MAX_BODY_BYTES: int = int(os.getenv("PROXY_MAX_BODY_BYTES", str(2_097_152)))
+
+# Cloudflare sits in front of the proxy too
+PROXY_CLOUDFLARE_ENABLED: bool = (
+    os.getenv("PROXY_CLOUDFLARE_ENABLED", "true").lower() == "true"
+)
+
+# ---------------------------------------------------------------------------
+# Middleware stack
+# ---------------------------------------------------------------------------
+if _BACKEND_MW_AVAILABLE:
+    # slowapi state
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+    # CF real-IP (outermost)
+    app.add_middleware(
+        CloudflareRealIPMiddleware,
+        cloudflare_enabled=PROXY_CLOUDFLARE_ENABLED,
+    )
+
+# Trusted Host (always apply — pure starlette, no backend dep)
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=_TRUSTED_HOST_LIST,
+)
+
+# CORS — explicit origins, no wildcard
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGIN_LIST,
+    allow_credentials=True,
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-API-Key", "Accept"],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"],
+    max_age=600,
+)
+
+if _BACKEND_MW_AVAILABLE:
+    # Payload size limit
+    app.add_middleware(
+        PayloadSizeLimitMiddleware,
+        max_body_bytes=PROXY_MAX_BODY_BYTES,
+    )
+    # OWASP security headers
+    app.add_middleware(SecurityHeadersMiddleware)
 
 # Configuration
 ALLOWED_TARGET_DOMAIN = os.getenv('ALLOWED_TARGET_DOMAIN', 'localhost:11434')
@@ -212,6 +300,22 @@ async def proxy_chat_completions(request: ChatCompletionRequest, raw_request: Re
     return llm_result
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    # Bind to 127.0.0.1 so only NGINX / Cloudflare Tunnel reach the proxy
+    # directly. Change to "0.0.0.0" ONLY behind a proper reverse proxy.
+    debug_mode = os.getenv("AGENT_DEBUG", "false").lower() == "true"
+    host = "0.0.0.0" if debug_mode else "127.0.0.1"
+    logger.info(
+        "Starting Myelin Proxy on %s:9000 | CF=%s | TrustedHosts=%s | MaxBody=%sKB",
+        host,
+        PROXY_CLOUDFLARE_ENABLED,
+        PROXY_TRUSTED_HOSTS,
+        PROXY_MAX_BODY_BYTES // 1024,
+    )
+    uvicorn.run(
+        app,
+        host=host,
+        port=9000,
+        timeout_keep_alive=30,   # Slowloris mitigation
+    )
 
 
