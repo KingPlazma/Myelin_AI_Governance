@@ -15,7 +15,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Thread pool for running sync Firestore operations asynchronously
-_executor = ThreadPoolExecutor(max_workers=5)
+_executor = ThreadPoolExecutor(max_workers=20)  # Increased concurrency limit pool size for Firebase DB calls
 
 
 class Database:
@@ -552,3 +552,4 @@ db = Database()
 def get_db() -> Database:
     """Get database instance"""
     return db
+

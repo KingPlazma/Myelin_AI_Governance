@@ -25,8 +25,7 @@ class AuditLog(AuditLogCreate):
     id: str
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuditLogResponse(BaseModel):
@@ -38,8 +37,7 @@ class AuditLogResponse(BaseModel):
     triggered_rules: List[str]
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuditStatsResponse(BaseModel):
@@ -49,3 +47,4 @@ class AuditStatsResponse(BaseModel):
     warned: int
     allowed: int
     block_rate: float
+

@@ -226,3 +226,17 @@ ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Check rule templates
 -- SELECT name, pillar, rule_type FROM rule_templates;
+
+-- ============================================================================
+-- PERFORMANCE / SCALABILITY INDEXES
+-- ============================================================================
+
+-- Partial index for fast query of only active rules
+CREATE INDEX IF NOT EXISTS idx_custom_rules_active ON custom_rules(organization_id, pillar) WHERE is_active = true;
+
+-- Compound indexes to speed up the dashboard rendering for audit logs
+CREATE INDEX IF NOT EXISTS idx_audit_logs_composite ON audit_logs(organization_id, audit_type, created_at DESC);
+
+-- Accelerate API Key verification
+CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(key_hash) WHERE is_active = true;
+

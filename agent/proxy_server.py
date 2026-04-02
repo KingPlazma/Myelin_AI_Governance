@@ -29,8 +29,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuration (In production, move to env vars)
-TARGET_LLM_URL = os.getenv("TARGET_LLM_URL", "http://localhost:11434/v1/chat/completions") # Default to Ollama
+# Configuration
+ALLOWED_TARGET_DOMAIN = os.getenv('ALLOWED_TARGET_DOMAIN', 'localhost:11434')
+TARGET_LLM_URL = os.getenv('TARGET_LLM_URL', 'http://localhost:11434/v1/chat/completions')
+if ALLOWED_TARGET_DOMAIN and ALLOWED_TARGET_DOMAIN not in TARGET_LLM_URL:
+    raise ValueError('TARGET_LLM_URL must be within ALLOWED_TARGET_DOMAIN')
 MYELIN_STRICT_MODE = os.getenv("MYELIN_STRICT_MODE", "true").lower() == "true"
 AGENT_ALERT_EMAIL = os.getenv("AGENT_ALERT_EMAIL", "")
 AGENT_ALERT_EMAIL_HEADER = os.getenv("AGENT_ALERT_EMAIL_HEADER", "X-User-Email")
@@ -156,7 +159,7 @@ async def proxy_chat_completions(request: ChatCompletionRequest, raw_request: Re
     async with httpx.AsyncClient(timeout=120.0) as client:
         try:
             # Reconstruct payload to preserve any extra params
-            payload = request.dict()
+            payload = request.model_dump()
             headers = {k: v for k, v in raw_request.headers.items() if k.lower() not in ["host", "content-length"]}
             
             response = await client.post(TARGET_LLM_URL, json=payload, headers=headers)
@@ -210,3 +213,5 @@ async def proxy_chat_completions(request: ChatCompletionRequest, raw_request: Re
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=9000)
+
+

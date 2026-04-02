@@ -35,8 +35,7 @@ class APIKey(BaseModel):
     is_active: bool
     rate_limit_per_minute: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class APIKeyResponse(BaseModel):
@@ -50,10 +49,10 @@ class APIKeyResponse(BaseModel):
     is_active: bool
     rate_limit_per_minute: int
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class APIKeyWithSecret(APIKeyResponse):
     """API key response with full key (only shown once)"""
     api_key: str = Field(..., description="Full API key - save this, it won't be shown again!")
+
