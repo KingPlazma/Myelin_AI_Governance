@@ -46,10 +46,11 @@ class ToxicityEnsembleManager:
                     logger.error(f"Failed to load rule from {filename}: {e}")
 
         # Verification
-        if len(self.rules) < 18:
-            logger.warning(f"CRITICAL: Only {len(self.rules)} rules loaded. Expected 18.")
+        expected_rules = 20
+        if len(self.rules) < expected_rules:
+            logger.warning(f"CRITICAL: Only {len(self.rules)} rules loaded. Expected {expected_rules}.")
         else:
-            logger.info("Full suite of 18 rules verified and active.")
+            logger.info("Full suite of 20 rules verified and active.")
 
     def run_full_audit(self, user_input: str, bot_response: str) -> dict:
         """Executes all loaded rules and aggregates scores."""

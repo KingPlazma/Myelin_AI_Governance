@@ -16,8 +16,16 @@ def run():
     print("\nStarting Proxy Server...")
     
     try:
-        # Run using uvicorn
-        subprocess.run(["uvicorn", "proxy_server:app", "--host", "0.0.0.0", "--port", "9000"])
+        subprocess.run([
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "proxy_server:app",
+            "--host",
+            os.getenv("MYELIN_HOST", "0.0.0.0"),
+            "--port",
+            os.getenv("MYELIN_PORT", "9000")
+        ])
     except KeyboardInterrupt:
         print("\nStopping Myelin Agent...")
     except Exception as e:

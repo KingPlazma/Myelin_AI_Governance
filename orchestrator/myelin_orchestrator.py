@@ -53,6 +53,7 @@ class MyelinOrchestrator:
             
         # Factual Check Pillar (FCAM)
         try:
+            self._clear_module_namespace("modules")
             fcam_path = os.path.join(base_path, "FCAM_fixed", "FCAM_fixed", "Factual_Consistency_Accountability_Module")
             sys.path.insert(0, fcam_path)
             sys.path.insert(0, os.path.join(fcam_path, "modules"))
@@ -117,11 +118,7 @@ class MyelinOrchestrator:
             if toxicity_path not in sys.path:
                 sys.path.insert(0, toxicity_path)
             
-            # Clear any cached modules
-            if 'modules.toxicity' in sys.modules:
-                del sys.modules['modules.toxicity']
-            if 'modules.toxicity.ensemble_manager' in sys.modules:
-                del sys.modules['modules.toxicity.ensemble_manager']
+            self._clear_module_namespace("modules")
             
             from modules.toxicity.ensemble_manager import ToxicityEnsembleManager
             self.toxicity_module = ToxicityEnsembleManager()
@@ -137,11 +134,7 @@ class MyelinOrchestrator:
             if governance_path not in sys.path:
                 sys.path.insert(0, governance_path)
             
-            # Clear any cached modules
-            if 'modules.governance' in sys.modules:
-                del sys.modules['modules.governance']
-            if 'modules.governance.ensemble_manager' in sys.modules:
-                del sys.modules['modules.governance.ensemble_manager']
+            self._clear_module_namespace("modules")
             
             from modules.governance.ensemble_manager import GovernanceEnsembleManager
             self.governance_module = GovernanceEnsembleManager()
@@ -157,11 +150,7 @@ class MyelinOrchestrator:
             if bias_path not in sys.path:
                 sys.path.insert(0, bias_path)
             
-            # Clear any cached modules
-            if 'modules.bias' in sys.modules:
-                del sys.modules['modules.bias']
-            if 'modules.bias.ensemble_manager' in sys.modules:
-                del sys.modules['modules.bias.ensemble_manager']
+            self._clear_module_namespace("modules")
             
             from modules.bias.ensemble_manager import BiasEnsembleManager
             self.bias_module = BiasEnsembleManager()
@@ -171,6 +160,16 @@ class MyelinOrchestrator:
             self.bias_module = self._create_mock_bias()
             
         logger.info("🎯 MYELIN orchestrator initialized!")
+
+    def _clear_module_namespace(self, root_module: str):
+        """Remove cached package modules so each pillar resolves from its own repo tree."""
+        stale_modules = [
+            module_name
+            for module_name in list(sys.modules.keys())
+            if module_name == root_module or module_name.startswith(f"{root_module}.")
+        ]
+        for module_name in stale_modules:
+            del sys.modules[module_name]
     
     def _create_mock_fairness(self):
         """Create mock fairness module"""
@@ -603,4 +602,3 @@ if __name__ == "__main__":
     print("\n" + "="*80)
     print(" INTEGRATION TEST COMPLETE ".center(80, "="))
     print("="*80 + "\n")
-
