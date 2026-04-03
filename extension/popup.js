@@ -1,14 +1,57 @@
+'use strict';
+
 const defaults = {
-  mode: "agent",
-  agentUrl: "http://localhost:9000/v1/chat/completions",
-  auditUrl: "http://localhost:8000/api/v1/audit/conversation",
-  model: "llama3.1:8b",
-  temperature: "0.2",
-  agentApiKey: "",
-  auditApiKey: "",
-  timeoutMs: "90000",
-  sourceMode: "manual"
+  mode: 'agent',
+  agentUrl: 'http://localhost:9000/v1/chat/completions',
+  auditUrl: 'http://localhost:8000/api/v1/audit/conversation',
+  model: 'llama3.1:8b',
+  temperature: '0.2',
+  agentApiKey: '',
+  auditApiKey: '',
+  timeoutMs: '90000',
+  sourceMode: 'manual',
 };
+
+// ─── Security: URL allowlist validation ────────────────────────────────────────
+// Ask the background service worker to validate the URL before we fetch it.
+// This prevents a compromised or misconfigured URL from sending requests to
+// arbitrary external servers.
+async function isAllowedUrl(rawUrl) {
+  try {
+    const result = await chrome.runtime.sendMessage({
+      type: 'MYELIN_CHECK_URL',
+      url: rawUrl,
+    });
+    return result?.allowed === true;
+  } catch {
+    return false;
+  }
+}
+
+// ─── Security: API key format guard ───────────────────────────────────────────
+// Only accept keys that look like Myelin API keys (prefix + alphanumeric).
+// Reject if it looks like a URL, JSON, or script fragment that was accidentally
+// pasted into the key field.
+const _KEY_RE = /^myelin_sk_[A-Za-z0-9_-]{10,}$/;
+const _BEARER_RE = /^[A-Za-z0-9_\-\.]+$/;  // generic Bearer tokens
+
+function validateApiKey(key) {
+  if (!key) return true; // empty is fine — auth is optional for local
+  return _KEY_RE.test(key) || _BEARER_RE.test(key);
+}
+
+// ─── Security: rate-limiter for the Run button ─────────────────────────────────
+// Prevents rapid consecutive requests from inside the popup UI.
+const _RUN_COOLDOWN_MS = 3000;
+let _lastRunAt = 0;
+
+function isRunThrottled() {
+  const now = Date.now();
+  if (now - _lastRunAt < _RUN_COOLDOWN_MS) return true;
+  _lastRunAt = now;
+  return false;
+}
+
 
 const els = {
   mode: document.getElementById("mode"),
@@ -165,26 +208,29 @@ function buildAuditSummaryFromAgent(result) {
 }
 
 async function runAgentMode(text) {
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (els.agentApiKey.value.trim()) {
-    headers.Authorization = `Bearer ${els.agentApiKey.value.trim()}`;
+  const urlRaw = els.agentUrl.value.trim();
+
+  // ── Security: block requests to non-allowlisted origins ──
+  if (!(await isAllowedUrl(urlRaw))) {
+    throw new Error(`Blocked: '${urlRaw}' is not an allowed API endpoint. Check your settings.`);
   }
 
-  const res = await fetchWithTimeout(els.agentUrl.value.trim(), {
-    method: "POST",
+  const apiKey = els.agentApiKey.value.trim();
+  if (apiKey && !validateApiKey(apiKey)) {
+    throw new Error('Invalid API key format. Please re-enter your agent API key.');
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  const res = await fetchWithTimeout(urlRaw, {
+    method: 'POST',
     headers,
     body: JSON.stringify({
       model: els.model.value.trim(),
       temperature: Number(els.temperature.value || defaults.temperature),
-      messages: [
-        {
-          role: "user",
-          content: text
-        }
-      ]
-    })
+      messages: [{ role: 'user', content: text }],
+    }),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -193,27 +239,35 @@ async function runAgentMode(text) {
   }
 
   return {
-    responseText: data?.choices?.[0]?.message?.content || "No response content returned.",
+    responseText: data?.choices?.[0]?.message?.content || 'No response content returned.',
     audit: buildAuditSummaryFromAgent(data),
-    raw: data
+    raw: data,
   };
 }
 
 async function runAuditMode(text) {
-  const headers = {
-    "Content-Type": "application/json"
-  };
-  if (els.auditApiKey.value.trim()) {
-    headers["X-API-Key"] = els.auditApiKey.value.trim();
+  const urlRaw = els.auditUrl.value.trim();
+
+  // ── Security: block requests to non-allowlisted origins ──
+  if (!(await isAllowedUrl(urlRaw))) {
+    throw new Error(`Blocked: '${urlRaw}' is not an allowed API endpoint. Check your settings.`);
   }
 
-  const res = await fetchWithTimeout(els.auditUrl.value.trim(), {
-    method: "POST",
+  const apiKey = els.auditApiKey.value.trim();
+  if (apiKey && !validateApiKey(apiKey)) {
+    throw new Error('Invalid API key format. Please re-enter your audit API key.');
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['X-API-Key'] = apiKey;
+
+  const res = await fetchWithTimeout(urlRaw, {
+    method: 'POST',
     headers,
     body: JSON.stringify({
-      user_input: "Browser extension audit request",
-      bot_response: text
-    })
+      user_input: 'Browser extension audit request',
+      bot_response: text,
+    }),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -222,9 +276,9 @@ async function runAuditMode(text) {
   }
 
   return {
-    responseText: "Audit completed successfully.",
+    responseText: 'Audit completed successfully.',
     audit: buildAuditSummaryFromAuditApi(data),
-    raw: data
+    raw: data,
   };
 }
 
@@ -240,35 +294,43 @@ async function resolvePromptText() {
 }
 
 async function runAction() {
-  let text = "";
+  // ── Security: popup-side rate limit ──
+  if (isRunThrottled()) {
+    setStatus('Please wait before running again', 'error');
+    return;
+  }
+
+  let text = '';
   try {
     text = await resolvePromptText();
   } catch (error) {
-    setStatus(String(error.message || error), "error");
+    setStatus(String(error.message || error), 'error');
     return;
   }
 
   if (!text) {
-    setStatus("Add prompt or page text first", "error");
+    setStatus('Add prompt or page text first', 'error');
     return;
   }
 
-  setStatus("Running Myelin...", "running");
-  els.responseBox.textContent = "Waiting for Myelin...";
-  els.auditBox.textContent = "Collecting audit data...";
+  setStatus('Running Myelin...', 'running');
+  // ── Security: use textContent (never innerHTML) so API responses
+  // containing HTML cannot execute as markup in the popup ──
+  els.responseBox.textContent = 'Waiting for Myelin...';
+  els.auditBox.textContent = 'Collecting audit data...';
 
   try {
-    const result = els.mode.value === "audit"
+    const result = els.mode.value === 'audit'
       ? await runAuditMode(text)
       : await runAgentMode(text);
 
-    els.responseBox.textContent = result.responseText;
-    els.auditBox.textContent = stringify(result.audit);
-    setStatus("Completed", "success");
+    els.responseBox.textContent = result.responseText;   // textContent — safe
+    els.auditBox.textContent = stringify(result.audit);  // textContent — safe
+    setStatus('Completed', 'success');
   } catch (error) {
-    els.responseBox.textContent = "Request failed.";
+    els.responseBox.textContent = 'Request failed.';
     els.auditBox.textContent = normalizeError(error);
-    setStatus("Request failed", "error");
+    setStatus('Request failed', 'error');
   }
 }
 

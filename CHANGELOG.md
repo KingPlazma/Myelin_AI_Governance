@@ -4,7 +4,21 @@
 
 ---
 
-## [2026-04-02 09:00 UTC] — Phase 2 Security Hardening · Security Layer 2
+## [2026-04-03 04:00 UTC] — Extension Security Hardening · v0.2.0
+
+**Message:** Lightweight security layer applied to Chrome Extension (MV3) — manifest CSP, URL allowlist, XSS sanitizer, message origin validation, API key format guard, popup rate limiter
+
+**Author:** Myelin Dev Team
+
+**Modified:**
+- `extension/manifest.json` — Removed dangerous `<all_urls>` host permission, added strict `content_security_policy` for extension pages (no inline scripts, no eval, no remote resources), restricted `content_scripts` to `http(s)` only (excludes `chrome://`, `chrome-extension://`, `about:`)
+- `extension/background.js` — Added origin allowlist (`ALLOWED_ORIGINS` set), lightweight XSS sanitizer on stored selection text, message sender origin validation (rejects messages from web pages), `MYELIN_CHECK_URL` handler for popup URL validation
+- `extension/content.js` — Added `sender.id` validation on all incoming messages, tighter size caps (3000/5000 chars), XSS strip on both selection and page text, explicit IIFE scope isolation
+- `extension/popup.js` — Added `isAllowedUrl()` (asks background to validate before every fetch), `validateApiKey()` format guard (rejects URLs/JSON pasted into key fields), popup-side 3s rate limiter on Run button, explicit `'use strict'`, confirmed all output uses `textContent` (never `innerHTML`)
+
+---
+
+ — Phase 2 Security Hardening · Security Layer 2
 
 **Message:** Phase 2 Security — Bot Detection, XSS Sanitizer, Anomaly Monitor, JWT, Frontend Hardening, Developer Tooling
 
