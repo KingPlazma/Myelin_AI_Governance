@@ -119,12 +119,33 @@ class MyelinAgentService:
             llm_result["choices"][0]["message"]["content"] = remediated_reply
 
         overall = response_audit.get("overall", {})
+
+        # Collect which pillars triggered violations
+        triggered_pillars = []
+        for pillar_name, pillar_data in response_audit.get("pillars", {}).items():
+            report = pillar_data.get("report", {})
+            violations = report.get("violations", [])
+            if violations:
+                triggered_pillars.append({
+                    "pillar": pillar_name,
+                    "violations": [
+                        {
+                            "rule": v.get("rule_name") or v.get("rule_id") or v.get("name", "Unknown Rule"),
+                            "reason": v.get("reason", ""),
+                            "severity": v.get("severity", ""),
+                        }
+                        for v in violations
+                    ]
+                })
+
         llm_result["myelin"] = {
             "request_id": request_id,
             "decision": overall.get("decision", "ALLOW"),
             "risk_level": overall.get("risk_level", "LOW"),
             "risk_score": overall.get("risk_score", 0.0),
-            "remediated": remediated_reply != bot_reply
+            "remediated": remediated_reply != bot_reply,
+            "risk_factors": overall.get("risk_factors", []),
+            "triggered_pillars": triggered_pillars,
         }
 
         incident = self._build_incident(
