@@ -11,16 +11,25 @@ import json
 import os
 import sys
 
-def initialize_firestore(credentials_path: str):
+def initialize_firestore():
     """Initialize Firebase and Firestore"""
     try:
-        # Initialize Firebase
-        if not os.path.exists(credentials_path):
-            print(f"❌ Credentials file not found: {credentials_path}")
-            sys.exit(1)
-        
-        cred = credentials.Certificate(credentials_path)
-        firebase_admin.initialize_app(cred)
+        import os, json, base64
+        import firebase_admin
+        from firebase_admin import credentials
+
+        encoded = os.getenv("FIREBASE_CREDENTIALS_JSON_BASE64")
+
+        if not encoded:
+            raise Exception("Missing Firebase credentials (FIREBASE_CREDENTIALS_JSON_BASE64)")
+
+        decoded = base64.b64decode(encoded)
+        cred_dict = json.loads(decoded)
+
+        cred = credentials.Certificate(cred_dict)
+
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred)
         
         client = firestore.client()
         print("✅ Firebase initialized")
@@ -165,16 +174,8 @@ def main():
     print("🔥 Firebase Firestore Initialization")
     print("="*60)
     
-    # Get credentials path
-    credentials_path = os.environ.get(
-        "FIREBASE_CREDENTIALS_JSON",
-        "./serviceAccountKey.json"
-    )
-    
-    print(f"\n🔍 Looking for credentials at: {credentials_path}")
-    
     # Initialize Firebase
-    client = initialize_firestore(credentials_path)
+    client = initialize_firestore()
     
     # Create collections and sample data
     create_collections(client)

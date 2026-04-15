@@ -1,14 +1,12 @@
 
 # Ignore all python cache
-__pycache__/
-*.pyc
-
-# Ignore environment files
+# Ignore service account keys and other JSON configs
+*.json
 .env
+__pycache__/
 .venv
 venv/
 env/
-serviceAccountKey.json
 **/serviceAccountKey.json
 # Ignore Firebase service account JSON credentials
 *firebase-adminsdk*.json

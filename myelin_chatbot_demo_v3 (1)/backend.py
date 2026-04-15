@@ -128,18 +128,31 @@ def get_firestore_client():
     if _firestore_client is not None:
         return _firestore_client
 
-    credentials_path = Path(FIREBASE_CREDENTIALS_JSON)
-    if not credentials_path.exists():
-        raise HTTPException(status_code=500, detail=f"Firebase credentials not found: {credentials_path}")
-
     try:
-        firebase_admin.get_app()
-    except ValueError:
-        cred = credentials.Certificate(str(credentials_path))
-        firebase_admin.initialize_app(cred)
+        import os, json, base64
+        import firebase_admin
+        from firebase_admin import credentials
 
-    _firestore_client = firestore.client(database_id=FIREBASE_DATABASE_ID)
-    return _firestore_client
+        encoded = os.getenv("FIREBASE_CREDENTIALS_JSON_BASE64")
+
+        if not encoded:
+            # Fallback to file for local dev if environment variable is missing
+            credentials_path = Path(FIREBASE_CREDENTIALS_JSON)
+            if not credentials_path.exists():
+                raise Exception("Missing FIREBASE_CREDENTIALS_JSON_BASE64 and credentials file not found")
+            cred = credentials.Certificate(str(credentials_path))
+        else:
+            decoded = base64.b64decode(encoded)
+            cred_dict = json.loads(decoded)
+            cred = credentials.Certificate(cred_dict)
+
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred)
+
+        _firestore_client = firestore.client(database_id=FIREBASE_DATABASE_ID)
+        return _firestore_client
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to initialize Firebase: {e}")
 
 
 def get_local_orchestrator():

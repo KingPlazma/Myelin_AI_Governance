@@ -29,23 +29,18 @@ class Database:
     def _initialize_client(self):
         """Initialize Firebase client"""
         try:
-            if not settings.FIREBASE_CREDENTIALS_JSON:
-                logger.warning("Firebase credentials not configured. Database features will be disabled.")
+            import os, json, base64
+            encoded = os.getenv("FIREBASE_CREDENTIALS_JSON_BASE64")
+
+            if not encoded:
+                logger.warning("Missing FIREBASE_CREDENTIALS_JSON_BASE64. Database features will be disabled.")
                 return
 
-            credentials_path = Path(settings.FIREBASE_CREDENTIALS_JSON)
-            if not credentials_path.is_absolute():
-                repo_root = Path(__file__).resolve().parents[2]
-                credentials_path = (repo_root / credentials_path).resolve()
+            decoded = base64.b64decode(encoded)
+            cred_dict = json.loads(decoded)
+            cred = credentials.Certificate(cred_dict)
 
-            if not credentials_path.exists():
-                raise FileNotFoundError(str(credentials_path))
-            
-            # Initialize Firebase app only if not already initialized
-            try:
-                firebase_admin.get_app()
-            except ValueError:
-                cred = credentials.Certificate(str(credentials_path))
+            if not firebase_admin._apps:
                 firebase_admin.initialize_app(cred)
             
             self.client = firestore.client()
