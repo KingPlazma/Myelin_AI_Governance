@@ -4,6 +4,7 @@ FastAPI server integrating authentication, custom rules, and enhanced auditing
 """
 
 from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
@@ -213,6 +214,23 @@ app.include_router(api_keys_router, prefix=settings.API_V1_PREFIX)
 app.include_router(rules_router, prefix=settings.API_V1_PREFIX)
 app.include_router(audit_router, prefix=settings.API_V1_PREFIX)
 app.include_router(public_router, prefix=settings.API_V1_PREFIX)
+
+
+# ============================================================================
+# STATIC FILES (WEBSITE)
+# ============================================================================
+
+# Define the absolute path to the frontend directory
+frontend_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+    "frontend", "site", "web"
+)
+
+if os.path.exists(frontend_dir):
+    app.mount("/site", StaticFiles(directory=frontend_dir, html=True), name="site")
+    logger.info(f"✅ Frontend website mounted from: {frontend_dir}")
+else:
+    logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
 
 
 # ============================================================================
