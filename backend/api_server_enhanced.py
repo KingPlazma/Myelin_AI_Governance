@@ -513,15 +513,9 @@ frontend_dir = os.path.join(
 )
 
 if os.path.exists(frontend_dir):
-    # Mount sub-directories explicitly first so they take precedence over root files
-    for folder in ["css", "assets", "js", "pages"]:
-        folder_path = os.path.join(frontend_dir, folder)
-        if os.path.exists(folder_path):
-            app.mount(f"/{folder}", StaticFiles(directory=folder_path), name=folder)
-    
-    # Finally mount the root static files (index.html, etc)
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
-    logger.info(f"✅ Production Website fully mounted from: {frontend_dir}")
+    # Simple root mount that worked previously for UI
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="site")
+    logger.info(f"✅ Production Website mounted at root from: {frontend_dir}")
 else:
     logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
 
