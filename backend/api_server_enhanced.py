@@ -226,6 +226,7 @@ frontend_dir = os.path.join(
     "frontend", "site", "web"
 )
 
+if os.path.exists(frontend_dir):
     app.mount("/site", StaticFiles(directory=frontend_dir, html=True), name="site")
     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
     logger.info(f"✅ Frontend website mounted at root and /site from: {frontend_dir}")
