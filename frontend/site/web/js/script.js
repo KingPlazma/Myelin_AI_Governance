@@ -45,8 +45,8 @@ const ruleInput = document.getElementById("ruleInput");
 const rulesGrid = document.getElementById("rules-grid");
 /* =========================================== */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
-const BACKEND_BASE_URL = 'http://localhost:8000';
+const BACKEND_BASE_URL = window.location.origin;
+const API_BASE_URL = `${BACKEND_BASE_URL}/api/v1`;
 let currentApiKey = localStorage.getItem('myelin_api_key') || null;
 let demoApiKeyCopied = sessionStorage.getItem('myelin_demo_key_copied') === 'true';
 
