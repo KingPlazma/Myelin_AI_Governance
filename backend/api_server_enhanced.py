@@ -221,15 +221,16 @@ app.include_router(public_router, prefix=settings.API_V1_PREFIX)
 # ============================================================================
 
 # Define the absolute path to the frontend directory
-frontend_dir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-    "frontend", "site", "web"
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+frontend_dir = os.path.join(BASE_DIR, "frontend", "site", "web")
 
 if os.path.exists(frontend_dir):
-    app.mount("/site", StaticFiles(directory=frontend_dir, html=True), name="site")
+    app.mount("/css", StaticFiles(directory=os.path.join(frontend_dir, "css")), name="css")
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
+    app.mount("/js", StaticFiles(directory=os.path.join(frontend_dir, "js")), name="js")
+    app.mount("/pages", StaticFiles(directory=os.path.join(frontend_dir, "pages")), name="pages")
     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
-    logger.info(f"✅ Frontend website mounted at root and /site from: {frontend_dir}")
+    logger.info(f"✅ All Frontend assets mounted from: {frontend_dir}")
 else:
     logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
 
