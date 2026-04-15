@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Factual Consistency Checking Rules - Myelin</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 20;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .rules-container {
+            max-width: 1200px;
+            margin: 120px auto 60px;
+            padding: 0 30px;
+            position: relative;
+            z-index: 5;
+        }
+       
+        .rule-card {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .rule-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .rule-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .rule-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+        }
+        .rule-description {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .rule-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .footer {
+            position: relative;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <div class="logo">
+        <img src="../assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <a href="../index.html" class="back-btn">← Back to Home</a>
+
+    <section class="rules-container">
+        <h1>✓ Factual Consistency Checking</h1>
+        <p class="subtitle">20 Verification Rules</p>
+
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 1</span>
+                <div class="rule-title">Verifiable Claim Assessment</div>
+                <div class="rule-description">Evaluates claims against reliable sources to assess factual accuracy and credibility.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 2</span>
+                <div class="rule-title">Source Attribution Validation</div>
+                <div class="rule-description">Verifies proper attribution of claims and citations to authoritative sources.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 3</span>
+                <div class="rule-title">Historical Timeline Accuracy</div>
+                <div class="rule-description">Checks chronological accuracy of historical events and dates mentioned in content.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 4</span>
+                <div class="rule-title">Numerical Data Validation</div>
+                <div class="rule-description">Verifies statistical claims, percentages, and numerical data against authoritative sources.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 5</span>
+                <div class="rule-title">Quote Accuracy Verification</div>
+                <div class="rule-description">Ensures quoted material is accurate and presented in proper context.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 6</span>
+                <div class="rule-title">Scientific Claim Validation</div>
+                <div class="rule-description">Checks scientific claims against peer-reviewed research and consensus.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 7</span>
+                <div class="rule-title">Consensus Check</div>
+                <div class="rule-description">Verifies alignment with scientific and expert consensus on established topics.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 8</span>
+                <div class="rule-title">Context Appropriateness</div>
+                <div class="rule-description">Ensures information is presented in appropriate context without misleading framing.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 9</span>
+                <div class="rule-title">Logical Consistency Checker</div>
+                <div class="rule-description">Identifies contradictions and logical fallacies within the content.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 10</span>
+                <div class="rule-title">Definition Accuracy</div>
+                <div class="rule-description">Verifies that technical and specialized terms are accurately defined.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 11</span>
+                <div class="rule-title">Geographic Data Validation</div>
+                <div class="rule-description">Checks accuracy of geographical references, locations, and spatial relationships.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 12</span>
+                <div class="rule-title">Legal Citation Accuracy</div>
+                <div class="rule-description">Verifies legal references, statute citations, and case law are correctly cited.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 13</span>
+                <div class="rule-title">Biographic Information Check</div>
+                <div class="rule-description">Validates biographical details about individuals including dates and achievements.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 14</span>
+                <div class="rule-title">Image & Visual Authenticity</div>
+                <div class="rule-description">Detects manipulated, deepfake, or misattributed images and media.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 15</span>
+                <div class="rule-title">Credential Verification</div>
+                <div class="rule-description">Checks validity of credentials and qualifications attributed to experts.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 16</span>
+                <div class="rule-title">Currency & Timeliness</div>
+                <div class="rule-description">Verifies information is current and notes when data may be outdated.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 17</span>
+                <div class="rule-title">Causal Claim Assessment</div>
+                <div class="rule-description">Evaluates causal claims to distinguish correlation from causation.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 18</span>
+                <div class="rule-title">Study Sampling Validation</div>
+                <div class="rule-description">Checks that study findings accurately represent the research methodology and sample.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 19</span>
+                <div class="rule-title">Hallucination Detection</div>
+                <div class="rule-description">Identifies AI-generated false information not grounded in reality.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">✓</div>
+                <span class="rule-number">Rule 20</span>
+                <div class="rule-title">Tone Consistency</div>
+                <div class="rule-description">Ensures factual content maintains neutral, objective tone without misleading framing.</div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>© 2026 Myelin • AI Governance & Alignment Middleware</p>
+    </footer>
+
+    <script src="../js/script.js?v=8"></script>
+</body>
+</html>

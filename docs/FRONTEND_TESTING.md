@@ -309,4 +309,4 @@ The frontend is a beautiful landing page. To fully integrate it with the backend
 
 **Current state**: Frontend UI works, Backend API works, but they're not connected yet.
 
-**To connect them**: Add fetch calls in `frontend/script.js` to call the backend APIs when users interact with the UI.
+**To connect them**: Add fetch calls in `frontend/site/web/js/script.js` to call the backend APIs when users interact with the UI.

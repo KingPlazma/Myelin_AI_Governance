@@ -3,7 +3,7 @@ API Key Models
 Pydantic models for API key management
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 

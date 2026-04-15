@@ -25,7 +25,7 @@
 - `backend/api_server_enhanced.py` — Wired in middleware layers 6/7/8: `BotDetectionMiddleware`, `RequestSanitizerMiddleware`, `AnomalyMonitorMiddleware`. Full middleware stack is now 8 layers deep.
 - `backend/api/auth.py` — Added `@limiter.limit(LIMIT_AUTH)` to `/register`, `/login`, `/resend-verification` (critical gap fixed). Added JWT endpoints: `POST /auth/token/login`, `POST /auth/token/refresh`
 - `backend/.env` — Added all new Phase 2 security variables
-- `frontend/index.html` — Added CSP meta tag, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, robots noindex, console security warning, devtools open detection, right-click disable
+- `frontend/site/web/index.html` — Added CSP meta tag, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, robots noindex, console security warning, devtools open detection, right-click disable
 
 ---
 

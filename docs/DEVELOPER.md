@@ -120,9 +120,9 @@ python proxy_server.py
 ```
 
 ### Frontend
-The frontend is pure static HTML — open `frontend/index.html` directly in a browser, or serve with:
+The frontend is pure static HTML — open `frontend/site/web/index.html` directly in a browser, or serve with:
 ```powershell
-python -m http.server 3000 --directory frontend
+python -m http.server 3000 --directory frontend/site/web
 ```
 
 ---
@@ -534,7 +534,7 @@ pyarmor gen backend/api_server_enhanced.py
 npm install -g terser
 
 # Minify script.js
-terser frontend/script.js -o frontend/script.min.js -c -m
+terser frontend/site/web/js/script.js -o frontend/site/web/js/script.min.js -c -m
 
 # Minify demo.js
 terser frontend/demo.js -o frontend/demo.min.js -c -m

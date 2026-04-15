@@ -187,6 +187,36 @@ class AuthService:
         Validate an API key and return associated data
         Returns: {api_key_record, user, organization} or None
         """
+        if settings.PUBLIC_DEMO_KEY_ENABLED and settings.PUBLIC_DEMO_API_KEY and api_key == settings.PUBLIC_DEMO_API_KEY:
+            demo_user = {
+                "id": "demo-user",
+                "email": "demo@myelin.local",
+                "full_name": "Myelin Demo User",
+                "role": "developer",
+                "email_verified": True,
+                "is_active": True,
+            }
+            demo_organization = {
+                "id": "demo-org",
+                "name": "Myelin Demo Org",
+                "tier": "demo",
+                "is_active": True,
+            }
+            return {
+                "api_key": {
+                    "id": "demo-api-key",
+                    "organization_id": demo_organization["id"],
+                    "user_id": demo_user["id"],
+                    "key_prefix": self.get_api_key_prefix(api_key),
+                    "name": "Local Demo API Key",
+                    "is_active": True,
+                    "rate_limit_per_minute": 60,
+                    "expires_at": None,
+                },
+                "user": demo_user,
+                "organization": demo_organization,
+            }
+
         if not api_key or not api_key.startswith(settings.API_KEY_PREFIX):
             return None
         

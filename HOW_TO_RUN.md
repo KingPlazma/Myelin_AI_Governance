@@ -77,7 +77,7 @@ When flags are raised, the user gets a PDF attachment built from the JSON audit 
 **Open a NEW terminal** (keep backend running in the first one)
 
 ```bash
-cd C:\Users\Admin\Downloads\Myelin_AI_Governance-main\Myelin_AI_Governance-main\frontend
+cd C:\Users\Admin\Downloads\Myelin_AI_Governance-main\Myelin_AI_Governance-main\frontend\site\web
 
 python -m http.server 3000
 ```
@@ -89,7 +89,7 @@ http://localhost:3000
 
 Simply double-click:
 ```
-C:\Users\Admin\Downloads\Myelin_AI_Governance-main\Myelin_AI_Governance-main\frontend\index.html
+C:\Users\Admin\Downloads\Myelin_AI_Governance-main\Myelin_AI_Governance-main\frontend\site\web\index.html
 ```
 
 ---
@@ -144,7 +144,7 @@ The frontend (`index.html`) has:
 
 The frontend currently doesn't call the backend API. To integrate:
 
-1. **Update `frontend/script.js`** to call backend APIs
+1. **Update `frontend/site/web/js/script.js`** to call backend APIs
 2. **Add authentication** (login/register forms)
 3. **Connect custom rules** to backend API
 4. **Show real audit results**

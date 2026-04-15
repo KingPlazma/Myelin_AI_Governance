@@ -131,10 +131,10 @@ The server will start on `http://localhost:8000`
 
 ### Running the Frontend
 
-Open `frontend/index.html` in a web browser, or serve it with a simple HTTP server:
+Open `frontend/site/web/index.html` in a web browser, or serve it with a simple HTTP server:
 
 ```bash
-cd frontend
+cd frontend/site/web
 python -m http.server 3000
 ```
 

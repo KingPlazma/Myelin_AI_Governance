@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toxicity & Safety Verification Rules - Myelin</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 20;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .rules-container {
+            max-width: 1200px;
+            margin: 120px auto 60px;
+            padding: 0 30px;
+            position: relative;
+            z-index: 5;
+        }
+       
+        .rule-card {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .rule-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .rule-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .rule-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+        }
+        .rule-description {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .rule-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .footer {
+            position: relative;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <div class="logo">
+        <img src="../assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <a href="../index.html" class="back-btn">← Back to Home</a>
+
+    <section class="rules-container">
+        <h1>🛡️ Toxicity & Safety Verification</h1>
+        <p class="subtitle">20 Verification Rules</p>
+
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 1</span>
+                <div class="rule-title">Explicit Hate Speech Detection</div>
+                <div class="rule-description">Detects direct, explicit attacks based on protected characteristics including race, ethnicity, religion, gender, and sexual orientation.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 2</span>
+                <div class="rule-title">Threats & Violence Detection</div>
+                <div class="rule-description">Identifies explicit threats of violence, harm, or physical aggression toward individuals or groups.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 3</span>
+                <div class="rule-title">Harassment & Bullying Detection</div>
+                <div class="rule-description">Detects persistent, targeted harassment and bullying behavior directed at specific individuals.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 4</span>
+                <div class="rule-title">Self-Harm Content Detection</div>
+                <div class="rule-description">Identifies content that promotes, encourages, or provides methods for self-injury or suicide.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 5</span>
+                <div class="rule-title">Illegal Activity Promotion</div>
+                <div class="rule-description">Detects content promoting or encouraging illegal acts including theft, fraud, and violence.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 6</span>
+                <div class="rule-title">Implicit Hate Speech Detection</div>
+                <div class="rule-description">Identifies subtle, coded language that expresses prejudice without explicit slurs or direct attacks.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 7</span>
+                <div class="rule-title">Cyberbullying Pattern Detection</div>
+                <div class="rule-description">Detects coordinated harassment campaigns and group pile-on patterns targeting individuals.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 8</span>
+                <div class="rule-title">Self-Harm Encouragement Detection</div>
+                <div class="rule-description">Identifies content that encourages others to engage in self-harm or dangerous behaviors.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 9</span>
+                <div class="rule-title">Emotional Manipulation & Gaslighting</div>
+                <div class="rule-description">Detects manipulative tactics designed to psychologically harm or control others.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 10</span>
+                <div class="rule-title">Criminal Instruction & How-To</div>
+                <div class="rule-description">Identifies step-by-step instructions for committing crimes or causing harm.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 11</span>
+                <div class="rule-title">Violence Enablement</div>
+                <div class="rule-description">Detects content that indirectly promotes or enables violence through normalization or glorification.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 12</span>
+                <div class="rule-title">Extremism & Radicalization</div>
+                <div class="rule-description">Identifies content promoting extremist ideologies, conspiracy theories, and radicalization techniques.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 13</span>
+                <div class="rule-title">Child Exploitation Prevention</div>
+                <div class="rule-description">Detects content involving exploitation, abuse, or endangerment of minors.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 14</span>
+                <div class="rule-title">Medical Misinformation Detection</div>
+                <div class="rule-description">Identifies false health claims that could cause physical harm (vaccines, treatments, etc.).</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 15</span>
+                <div class="rule-title">Drug Abuse Promotion</div>
+                <div class="rule-description">Detects content promoting illegal drug use or providing methods for substance abuse.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 16</span>
+                <div class="rule-title">Public Panic Incitement</div>
+                <div class="rule-description">Identifies content designed to cause widespread panic, fear, or mass hysteria.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 17</span>
+                <div class="rule-title">Doxxing & Privacy Violation</div>
+                <div class="rule-description">Detects content sharing private information to enable harassment or harm.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 18</span>
+                <div class="rule-title">Fraud & Scam Detection</div>
+                <div class="rule-description">Identifies fraudulent schemes, phishing attempts, and scam content.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 19</span>
+                <div class="rule-title">AI Judgment Exploitation</div>
+                <div class="rule-description">Detects adversarial inputs designed to exploit or manipulate AI decision-making systems.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚠️</div>
+                <span class="rule-number">Rule 20</span>
+                <div class="rule-title">Sexual Harassment & Exploitation</div>
+                <div class="rule-description">Identifies sexually explicit harassment, unwanted advances, and exploitation content.</div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>© 2026 Myelin • AI Governance & Alignment Middleware</p>
+    </footer>
+
+    <script src="../js/script.js?v=8"></script>
+</body>
+</html>

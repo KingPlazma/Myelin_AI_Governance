@@ -3,7 +3,7 @@ Audit Log Models
 Pydantic models for audit logging
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 

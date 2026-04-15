@@ -6,7 +6,7 @@ The backend was returning **422 Unprocessable Entity** because the registration 
 
 ## ✅ What I Fixed
 
-Added the `role: 'developer'` field to the registration request in `frontend/script.js`.
+Added the `role: 'developer'` field to the registration request in `frontend/site/web/js/script.js`.
 
 ---
 

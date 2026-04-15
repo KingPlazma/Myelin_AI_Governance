@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fairness & Bias Analysis Rules - Myelin</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 20;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .rules-container {
+            max-width: 1200px;
+            margin: 120px auto 60px;
+            padding: 0 30px;
+            position: relative;
+            z-index: 5;
+        }
+       
+        .rule-card {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .rule-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .rule-number {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .rule-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+        }
+        .rule-description {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+        }
+        .rule-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: 42px;
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .footer {
+            position: relative;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <div class="logo">
+        <img src="../assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <a href="../index.html" class="back-btn">← Back to Home</a>
+
+    <section class="rules-container">
+        <h1>⚖️ Fairness Analysis</h1>
+        <p class="subtitle">20 Verification Rules</p>
+
+        <div class="rules-grid">
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 1</span>
+                <div class="rule-title">Equal Treatment Verification</div>
+                <div class="rule-description">Ensures individuals or groups in similar situations are treated equally without arbitrary distinctions.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 2</span>
+                <div class="rule-title">Non-Discrimination Principle</div>
+                <div class="rule-description">Verifies content does not discriminate based on protected characteristics or membership in vulnerable groups.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 3</span>
+                <div class="rule-title">Equitable Access Assessment</div>
+                <div class="rule-description">Checks that information or opportunities are equitably accessible to all relevant populations.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 4</span>
+                <div class="rule-title">Representation Fairness</div>
+                <div class="rule-description">Ensures all voices and perspectives are fairly represented in examples and case studies.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 5</span>
+                <div class="rule-title">Due Process Assurance</div>
+                <div class="rule-description">Verifies fair procedures are in place for decision-making and conflict resolution.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 6</span>
+                <div class="rule-title">Transparency in Rules</div>
+                <div class="rule-description">Ensures criteria for decisions are transparent and clearly communicated to affected parties.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 7</span>
+                <div class="rule-title">Reasonableness Evaluation</div>
+                <div class="rule-description">Checks that policies, rules, or constraints are reasonable and justified.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 8</span>
+                <div class="rule-title">Proportionality Assessment</div>
+                <div class="rule-description">Verifies consequences are proportional to the situation and not unnecessarily harsh.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 9</span>
+                <div class="rule-title">Appeal Rights Validation</div>
+                <div class="rule-description">Ensures individuals have meaningful opportunity to challenge unfair decisions.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 10</span>
+                <div class="rule-title">Consistency in Application</div>
+                <div class="rule-description">Verifies rules and standards are applied consistently across similar situations.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 11</span>
+                <div class="rule-title">Burden Distribution Fairness</div>
+                <div class="rule-description">Checks that burdens, costs, or responsibilities are fairly distributed across society.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 12</span>
+                <div class="rule-title">Benefit Distribution Equity</div>
+                <div class="rule-description">Ensures benefits and opportunities are equitably distributed without unfair advantage.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 13</span>
+                <div class="rule-title">Counterbalance Check</div>
+                <div class="rule-description">Verifies that advantages for some groups don't come at unreasonable disadvantage to others.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 14</span>
+                <div class="rule-title">Merit-Based Assessment</div>
+                <div class="rule-description">Ensures decisions are based on relevant merit and qualifications, not irrelevant factors.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 15</span>
+                <div class="rule-title">Context Sensitivity</div>
+                <div class="rule-description">Considers relevant contextual factors that affect what's fair in specific situations.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 16</span>
+                <div class="rule-title">Reciprocity Principle</div>
+                <div class="rule-description">Verifies mutual obligations and reciprocal treatment across relationships.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 17</span>
+                <div class="rule-title">Narrative Fairness</div>
+                <div class="rule-description">Ensures narratives and stories represent situations fairly and comprehensively.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 18</span>
+                <div class="rule-title">Vulnerability Protection</div>
+                <div class="rule-description">Ensures vulnerable populations receive appropriate protections and consideration.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 19</span>
+                <div class="rule-title">Remedy Adequacy</div>
+                <div class="rule-description">Verifies that remedies for unfair treatment are adequate and effective.</div>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-icon">⚖️</div>
+                <span class="rule-number">Rule 20</span>
+                <div class="rule-title">Systemic Fairness</div>
+                <div class="rule-description">Evaluates fairness at the system level, not just individual transactions.</div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>© 2026 Myelin • AI Governance & Alignment Middleware</p>
+    </footer>
+
+    <script src="../js/script.js?v=8"></script>
+</body>
+</html>

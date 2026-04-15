@@ -11,6 +11,7 @@ import logging
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,20 @@ class Database:
             if not settings.FIREBASE_CREDENTIALS_JSON:
                 logger.warning("Firebase credentials not configured. Database features will be disabled.")
                 return
+
+            credentials_path = Path(settings.FIREBASE_CREDENTIALS_JSON)
+            if not credentials_path.is_absolute():
+                repo_root = Path(__file__).resolve().parents[2]
+                credentials_path = (repo_root / credentials_path).resolve()
+
+            if not credentials_path.exists():
+                raise FileNotFoundError(str(credentials_path))
             
             # Initialize Firebase app only if not already initialized
             try:
                 firebase_admin.get_app()
             except ValueError:
-                cred = credentials.Certificate(settings.FIREBASE_CREDENTIALS_JSON)
+                cred = credentials.Certificate(str(credentials_path))
                 firebase_admin.initialize_app(cred)
             
             self.client = firestore.client()

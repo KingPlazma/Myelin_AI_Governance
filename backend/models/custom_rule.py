@@ -3,7 +3,7 @@ Custom Rule Models
 Pydantic models for custom rule management
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from enum import Enum

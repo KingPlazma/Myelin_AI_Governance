@@ -36,6 +36,15 @@ async def create_demo_api_key(payload: DemoKeyRequest):
             detail="Demo key provisioning is disabled"
         )
 
+    if settings.PUBLIC_DEMO_API_KEY:
+        return {
+            "api_key": settings.PUBLIC_DEMO_API_KEY,
+            "key_prefix": settings.PUBLIC_DEMO_API_KEY[:20],
+            "organization_id": "demo-org",
+            "email": "demo@myelin.local",
+            "mode": "local-demo"
+        }
+
     suffix = secrets.token_hex(4)
     email = f"demo_{suffix}@example.com"
     password = secrets.token_urlsafe(18) + "A1!"

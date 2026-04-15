@@ -155,6 +155,7 @@ class Settings(BaseSettings):
 
     # Public frontend demo controls
     PUBLIC_DEMO_KEY_ENABLED: bool = False
+    PUBLIC_DEMO_API_KEY: str = ""
     
     class Config:
         env_file = ".env"
