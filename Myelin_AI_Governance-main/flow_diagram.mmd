@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant User
+    participant App
+    participant MyelinAgent
+    participant Pillars as Myelin 5 Pillars
+    participant LLM
+    
+    User->>App: "What is his SSN?"
+    App->>MyelinAgent: POST /v1/chat/completions
+    
+    MyelinAgent->>Pillars: Audit Prompt (Governance)
+    Pillars-->>MyelinAgent: 🚩 PII Request Detected
+    
+    MyelinAgent->>MyelinAgent: Agent autonomous rewrite/redaction
+    MyelinAgent->>LLM: POST /chat (Safeguarded Prompt)
+    LLM-->>MyelinAgent: "The SSN is 123-456-7890" (Model Halucinates PII)
+    
+    MyelinAgent->>Pillars: Audit Response (Governance/Toxicity)
+    Pillars-->>MyelinAgent: 🚩 PII Leak
+    
+    MyelinAgent->>MyelinAgent: Agent Auto-Remediation (Masking)
+    MyelinAgent-->>App: "The SSN is [REDACTED]"
+    App-->>User: "The SSN is [REDACTED]"

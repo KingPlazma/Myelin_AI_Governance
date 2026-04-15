@@ -1,0 +1,31 @@
+graph TD
+    User([End User]) --> |Prompt| ClientApp[Client Application]
+    
+    subgraph Myelin Sentinel [Myelin Sentinel Agent]
+        direction TB
+        Proxy[Gateway/Proxy Interceptor]
+        AgentCore[Agent Remediation Brain]
+        BgWorker[24/7 Background Observer]
+        
+        Proxy --> |Check Request| AgentCore
+        AgentCore --> |Rewrite if Bad| Proxy
+    end
+    
+    ClientApp --> |OpenAI/LLM REST Call| Proxy
+    Proxy --> |Forward Clean Prompt| LLM((LLMs: OpenAI, Anthropic, Ollama))
+    LLM --> |Raw Response| Proxy
+    
+    Proxy -.-> |Async Dispatch| BgWorker
+    
+    subgraph Myelin 5 Pillars [Myelin Engine]
+        F[Fairness]
+        B[Bias]
+        FC[FCAM]
+        T[Toxicity]
+        G[Governance]
+    end
+    
+    AgentCore <--> |Audit| F & B & FC & T & G
+    BgWorker <--> |Deep Audit| F & B & FC & T & G
+    
+    BgWorker --> |Alerts & Analytics| Dashboard[Admin Dashboard / Slack Alerts]
