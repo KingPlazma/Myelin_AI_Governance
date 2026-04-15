@@ -226,9 +226,9 @@ frontend_dir = os.path.join(
     "frontend", "site", "web"
 )
 
-if os.path.exists(frontend_dir):
     app.mount("/site", StaticFiles(directory=frontend_dir, html=True), name="site")
-    logger.info(f"✅ Frontend website mounted from: {frontend_dir}")
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
+    logger.info(f"✅ Frontend website mounted at root and /site from: {frontend_dir}")
 else:
     logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
 
@@ -237,9 +237,9 @@ else:
 # ROOT ENDPOINTS
 # ============================================================================
 
-@app.get("/")
+@app.get("/status")
 async def root():
-    """API root endpoint"""
+    """API status endpoint (moved from root)"""
     db = get_db()
     
     return {
@@ -259,7 +259,8 @@ async def root():
             "custom_rules": f"{settings.API_V1_PREFIX}/rules/custom",
             "audit": f"{settings.API_V1_PREFIX}/audit",
             "health": "/health",
-            "docs": "/docs"
+            "docs": "/docs",
+            "website": "/"
         },
         "database_connected": db.is_connected()
     }
