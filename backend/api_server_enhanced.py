@@ -216,23 +216,7 @@ app.include_router(audit_router, prefix=settings.API_V1_PREFIX)
 app.include_router(public_router, prefix=settings.API_V1_PREFIX)
 
 
-# ============================================================================
-# STATIC FILES (WEBSITE)
-# ============================================================================
-
-# Define the absolute path to the frontend directory
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-frontend_dir = os.path.join(BASE_DIR, "frontend", "site", "web")
-
-if os.path.exists(frontend_dir):
-    app.mount("/css", StaticFiles(directory=os.path.join(frontend_dir, "css")), name="css")
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, "assets")), name="assets")
-    app.mount("/js", StaticFiles(directory=os.path.join(frontend_dir, "js")), name="js")
-    app.mount("/pages", StaticFiles(directory=os.path.join(frontend_dir, "pages")), name="pages")
-    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
-    logger.info(f"✅ All Frontend assets mounted from: {frontend_dir}")
-else:
-    logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
+# Website assets will be mounted at the very end of the file to avoid route shadowing.
 
 
 # ============================================================================
@@ -517,6 +501,29 @@ async def batch_audit_conversations(requests: List[ConversationAuditRequest], re
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ============================================================================
+# STATIC FILES (WEBSITE) - MOUNTED LAST
+# ============================================================================
+frontend_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+    "frontend", "site", "web"
+)
+
+if os.path.exists(frontend_dir):
+    # Mount sub-directories explicitly first so they take precedence over root files
+    for folder in ["css", "assets", "js", "pages"]:
+        folder_path = os.path.join(frontend_dir, folder)
+        if os.path.exists(folder_path):
+            app.mount(f"/{folder}", StaticFiles(directory=folder_path), name=folder)
+    
+    # Finally mount the root static files (index.html, etc)
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
+    logger.info(f"✅ Production Website fully mounted from: {frontend_dir}")
+else:
+    logger.warning(f"⚠️ Frontend directory not found at: {frontend_dir}")
 
 
 # ============================================================================
