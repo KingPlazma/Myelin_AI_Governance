@@ -3,7 +3,7 @@ Authentication API Endpoints
 Handles user registration, login, and API key management
 """
 
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Request, Response
 from typing import List
 from pydantic import BaseModel, EmailStr
 
@@ -30,7 +30,7 @@ class ResendVerificationRequest(BaseModel):
 
 @router.post("/register", response_model=UserWithToken, status_code=status.HTTP_201_CREATED)
 @limiter.limit(LIMIT_AUTH)
-async def register(user_data: UserCreate, request: Request):
+async def register(user_data: UserCreate, request: Request, response: Response):
     """
     Register a new user and organization
     
@@ -64,7 +64,7 @@ async def register(user_data: UserCreate, request: Request):
 
 @router.post("/login", response_model=UserWithToken)
 @limiter.limit(LIMIT_AUTH)
-async def login(login_data: UserLogin, request: Request):
+async def login(login_data: UserLogin, request: Request, response: Response):
     """
     Login with email and password
     
@@ -151,7 +151,7 @@ async def verify_email(token: str):
 
 @router.post("/resend-verification")
 @limiter.limit("5/minute")
-async def resend_verification_email(payload: ResendVerificationRequest, request: Request):
+async def resend_verification_email(payload: ResendVerificationRequest, request: Request, response: Response):
     """
     Resend email verification link for users who have not verified yet.
     """
@@ -176,7 +176,7 @@ class TokenResponse(BaseModel):
 
 @router.post("/token/login", response_model=TokenResponse, tags=["JWT Authentication"])
 @limiter.limit(LIMIT_AUTH)
-async def login_jwt(login_data: UserLogin, request: Request):
+async def login_jwt(login_data: UserLogin, request: Request, response: Response):
     """Login and receive a short-lived access token plus refresh token."""
     auth_service = get_auth_service()
     jwt_service = get_jwt_service()
@@ -191,7 +191,7 @@ async def login_jwt(login_data: UserLogin, request: Request):
 
 @router.post("/token/refresh", response_model=TokenResponse, tags=["JWT Authentication"])
 @limiter.limit("10/minute")
-async def refresh_jwt(payload: TokenRefreshRequest, request: Request):
+async def refresh_jwt(payload: TokenRefreshRequest, request: Request, response: Response):
     """Exchange a valid refresh token for a fresh token pair."""
     jwt_service = get_jwt_service()
     claims = jwt_service.verify_refresh_token(payload.refresh_token)

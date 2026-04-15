@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Install Myelin Extension</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .install-shell {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 32px 20px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .install-card {
+            width: min(920px, 100%);
+            background: rgba(19, 25, 35, 0.84);
+            border: 1px solid rgba(132, 155, 186, 0.24);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+            padding: 40px 28px;
+            text-align: center;
+        }
+
+        .install-card h1 {
+            font-family: "Rockwell", "Cambria", serif;
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            margin-bottom: 12px;
+        }
+
+        .install-card p {
+            color: var(--muted);
+            max-width: 760px;
+            margin: 0 auto 24px;
+            line-height: 1.7;
+        }
+
+        .steps {
+            text-align: left;
+            max-width: 720px;
+            margin: 0 auto 28px;
+            padding-left: 20px;
+            color: var(--text);
+        }
+
+        .steps li {
+            margin-bottom: 12px;
+            line-height: 1.55;
+        }
+
+        .path-box {
+            margin: 20px auto 30px;
+            max-width: 720px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(168, 191, 220, 0.28);
+            color: #dfe8f4;
+            word-break: break-word;
+        }
+
+        .path-box .btn {
+            margin: 0;
+        }
+
+        .download-hint {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .install-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <div class="logo">
+        <img src="../assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <main class="install-shell">
+        <section class="install-card">
+            <h1>Install the Myelin Extension</h1>
+            <p>
+                Download the Myelin browser extension package, extract it, then load it unpacked
+                in Chrome or Edge to start using real-time AI governance checks.
+            </p>
+
+            <ol class="steps">
+                <li>Click <strong>Download Extension (.zip)</strong> below.</li>
+                <li>Extract the downloaded zip file to a local folder.</li>
+                <li>Open <strong>chrome://extensions</strong> in your browser.</li>
+                <li>Turn on <strong>Developer mode</strong>.</li>
+                <li>Click <strong>Load unpacked</strong> and select the extracted extension folder.</li>
+                <li>Pin the extension and open the popup to start using it.</li>
+            </ol>
+
+            <div class="path-box">
+                <a href="../assets/downloads/myelin-extension.zip" class="btn primary" download>Download Extension (.zip)</a>
+                <p class="download-hint">After extracting, select the folder containing <strong>manifest.json</strong> in the browser extension manager.</p>
+            </div>
+
+            <div class="install-actions">
+                <a href="../index.html#download-extension" class="btn primary">Back to Extension Section</a>
+                <a href="../index.html" class="btn secondary">Back to Home</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

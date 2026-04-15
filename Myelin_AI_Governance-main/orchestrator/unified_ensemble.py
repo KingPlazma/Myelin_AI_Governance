@@ -20,6 +20,16 @@ class UnifiedEnsembleManager:
         self.base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.load_all_pillars()
 
+    def _clear_module_namespace(self, root_module):
+        """Clear cached package modules so each pillar resolves its own module tree."""
+        stale_modules = [
+            module_name
+            for module_name in list(sys.modules.keys())
+            if module_name == root_module or module_name.startswith(f"{root_module}.")
+        ]
+        for module_name in stale_modules:
+            del sys.modules[module_name]
+
     def load_all_pillars(self):
         print(">>> 🔄 Initializing MYELIN System (Loading 5 Pillars)...")
         
@@ -37,6 +47,7 @@ class UnifiedEnsembleManager:
         try:
             path = os.path.join(self.base_path, "Toxicity", "Toxicity")
             if path not in sys.path: sys.path.insert(0, path)
+            self._clear_module_namespace("modules")
             from modules.toxicity.ensemble_manager import ToxicityEnsembleManager
             self.pillars['toxicity'] = ToxicityEnsembleManager()
             print("  ✅ Toxicity Pillar: ONLINE")
@@ -49,7 +60,7 @@ class UnifiedEnsembleManager:
             original_dir = os.getcwd()
             os.chdir(gov_path)
             if gov_path not in sys.path: sys.path.insert(0, gov_path)
-            if 'modules' in sys.modules: del sys.modules['modules']
+            self._clear_module_namespace("modules")
             from modules.governance.ensemble_manager import GovernanceEnsembleManager
             self.pillars['governance'] = GovernanceEnsembleManager()
             os.chdir(original_dir)
@@ -65,7 +76,7 @@ class UnifiedEnsembleManager:
             original_dir = os.getcwd()
             os.chdir(bias_path)
             if bias_path not in sys.path: sys.path.insert(0, bias_path)
-            if 'modules' in sys.modules: del sys.modules['modules']
+            self._clear_module_namespace("modules")
             from modules.bias.ensemble_manager import BiasEnsembleManager
             self.pillars['bias'] = BiasEnsembleManager()
             os.chdir(original_dir)
@@ -77,13 +88,13 @@ class UnifiedEnsembleManager:
 
         # 5. Factual Pillar (FCAM) - NOW ONLINE!
         try:
-            fcam_path = os.path.join(self.base_path, "FCAM", "FCAM_fixed", "Factual_Consistency_Accountability_Module")
+            fcam_path = os.path.join(self.base_path, "FCAM_fixed", "FCAM_fixed", "Factual_Consistency_Accountability_Module")
             
             # Add path
             if fcam_path not in sys.path: sys.path.insert(0, fcam_path)
             
             # Clear conflicts
-            if 'modules' in sys.modules: del sys.modules['modules']
+            self._clear_module_namespace("modules")
             
             # Import Manager
             from modules.factual.ensemble_manager import FactualEnsembleManager

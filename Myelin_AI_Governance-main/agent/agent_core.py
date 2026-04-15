@@ -6,9 +6,13 @@ from typing import Dict, List, Optional, Any
 
 # Add orchestrator to path
 base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(base_path, "orchestrator"))
+sys.path.insert(0, os.path.join(base_path, "orchestrator"))
 
-from myelin_orchestrator import MyelinOrchestrator, get_orchestrator
+try:
+    from myelin_orchestrator import MyelinOrchestrator, get_orchestrator
+except ImportError as e:
+    logger.error(f"Failed to import myelin_orchestrator: {e}")
+    raise
 
 logger = logging.getLogger("MyelinAgentCore")
 

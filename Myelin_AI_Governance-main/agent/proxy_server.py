@@ -6,12 +6,13 @@ from typing import Optional
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import get_settings
 from operational_auth import require_operational_token
 from provider_client import DownstreamLLMError
-from schemas import ChatCompletionRequest, HealthResponse
+from schemas import ChatCompletionRequest, HealthResponse, TextAuditRequest
 from service import MyelinAgentService
 
 
@@ -38,6 +39,14 @@ app = FastAPI(
     description="Production-oriented Myelin middleware for always-on chatbot governance.",
     version=settings.service_version,
     lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -103,6 +112,13 @@ async def metrics(_authorized: bool = Depends(ops_auth)):
 async def proxy_chat_completions(request: ChatCompletionRequest, raw_request: Request):
     headers = {key.lower(): value for key, value in raw_request.headers.items()}
     result = await agent_service.handle_chat_completion(request=request, raw_headers=headers)
+    return result
+
+
+@app.post("/v1/audit/text")
+async def proxy_text_audit(request: TextAuditRequest, raw_request: Request):
+    headers = {key.lower(): value for key, value in raw_request.headers.items()}
+    result = await agent_service.handle_text_audit(text=request.text, raw_headers=headers)
     return result
 
 

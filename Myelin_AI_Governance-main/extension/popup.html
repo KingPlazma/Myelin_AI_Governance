@@ -19,14 +19,14 @@
         <label for="mode">Mode</label>
         <select id="mode">
           <option value="agent">Agent Proxy</option>
-          <option value="audit">Audit API</option>
+          <option value="audit" selected>Audit API</option>
         </select>
       </div>
 
       <div class="field-grid">
         <div class="field">
           <label for="agentUrl">Agent URL</label>
-          <input id="agentUrl" value="http://localhost:9000/v1/chat/completions">
+          <input id="agentUrl" value="http://localhost:9000/v1/audit/text">
         </div>
         <div class="field">
           <label for="auditUrl">Audit URL</label>
@@ -95,11 +95,6 @@
           <p class="result-label">Page</p>
           <p id="pageMeta" class="meta">No page context yet</p>
         </div>
-      </div>
-
-      <div class="result-block">
-        <p class="result-label">Response</p>
-        <pre id="responseBox">Run a request to see results.</pre>
       </div>
 
       <div class="result-block">

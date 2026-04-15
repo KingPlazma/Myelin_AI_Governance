@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -56,6 +57,8 @@ class MyelinAgentService:
 
         prompt_audit = self.agent_core.audit_conversation(user_prompt, bot_response="")
         prompt_overall = prompt_audit.get("overall", {})
+        prompt_summary = self._build_myelin_summary(prompt_audit, request_id=request_id)
+        prompt_summary["stage"] = "prompt"
 
         if prompt_overall.get("decision") == "BLOCK" and self.settings.strict_mode:
             self.metrics.record_block()
@@ -84,13 +87,8 @@ class MyelinAgentService:
                     },
                     "finish_reason": "content_filter"
                 }],
-                "myelin": {
-                    "request_id": request_id,
-                    "decision": prompt_overall.get("decision", "BLOCK"),
-                    "risk_level": prompt_overall.get("risk_level", "HIGH"),
-                    "risk_score": prompt_overall.get("risk_score", 1.0),
-                    "stage": "prompt"
-                }
+                "myelin": prompt_summary,
+                "myelin_prompt": prompt_summary
             }
 
         payload = request.model_dump()
@@ -118,35 +116,11 @@ class MyelinAgentService:
             self.metrics.record_remediation()
             llm_result["choices"][0]["message"]["content"] = remediated_reply
 
-        overall = response_audit.get("overall", {})
+        response_summary = self._build_myelin_summary(response_audit, request_id=request_id)
+        response_summary["remediated"] = remediated_reply != bot_reply
 
-        # Collect which pillars triggered violations
-        triggered_pillars = []
-        for pillar_name, pillar_data in response_audit.get("pillars", {}).items():
-            report = pillar_data.get("report", {})
-            violations = report.get("violations", [])
-            if violations:
-                triggered_pillars.append({
-                    "pillar": pillar_name,
-                    "violations": [
-                        {
-                            "rule": v.get("rule_name") or v.get("rule_id") or v.get("name", "Unknown Rule"),
-                            "reason": v.get("reason", ""),
-                            "severity": v.get("severity", ""),
-                        }
-                        for v in violations
-                    ]
-                })
-
-        llm_result["myelin"] = {
-            "request_id": request_id,
-            "decision": overall.get("decision", "ALLOW"),
-            "risk_level": overall.get("risk_level", "LOW"),
-            "risk_score": overall.get("risk_score", 0.0),
-            "remediated": remediated_reply != bot_reply,
-            "risk_factors": overall.get("risk_factors", []),
-            "triggered_pillars": triggered_pillars,
-        }
+        llm_result["myelin"] = response_summary
+        llm_result["myelin_prompt"] = prompt_summary
 
         incident = self._build_incident(
             request_id=request_id,
@@ -161,11 +135,169 @@ class MyelinAgentService:
         self.incident_store.append(incident)
         return llm_result
 
+    async def handle_text_audit(
+        self,
+        text: str,
+        raw_headers: Dict[str, str],
+        route: str = "/v1/audit/text"
+    ) -> Dict[str, Any]:
+        self.metrics.record_request()
+        request_id = str(uuid4())
+        user_prompt = text or ""
+        alert_email = await resolve_alert_email(
+            raw_headers=raw_headers,
+            allow_fallback_email=self.settings.allow_fallback_email,
+            alert_email_header=self.settings.alert_email_header,
+            alert_email=self.settings.alert_email
+        )
+
+        # In text-only mode, treat selected text as response content for policy checks.
+        # Some pillars score output behavior more strongly than user-input framing.
+        prompt_audit = self.agent_core.audit_conversation(
+            user_input="",
+            bot_response=user_prompt,
+            source_text=user_prompt
+        )
+        prompt_summary = self._build_myelin_summary(prompt_audit, request_id=request_id)
+        self._augment_structural_bias_signals(prompt_summary, user_prompt)
+        prompt_summary["stage"] = "response_text"
+
+        if prompt_summary.get("decision") == "BLOCK" and self.settings.strict_mode:
+            self.metrics.record_block()
+
+        schedule_flag_email(alert_email, prompt_audit, "agent_prompt")
+
+        incident = self._build_incident(
+            request_id=request_id,
+            route=route,
+            model="text-audit",
+            user_prompt=user_prompt,
+            bot_response=None,
+            remediated_response=None,
+            audit_report=prompt_audit,
+            alert_email=alert_email
+        )
+        self.incident_store.append(incident)
+
+        return {
+            "mode": "text_audit",
+            "myelin": prompt_summary,
+            "myelin_prompt": prompt_summary,
+            "audit_report": prompt_audit
+        }
+
     def recent_incidents(self, limit: int = 20):
         return [record.model_dump() for record in self.incident_store.recent(limit=limit)]
 
     def current_metrics(self) -> Dict[str, int]:
         return self.metrics.snapshot()
+
+    @staticmethod
+    def _build_myelin_summary(audit_report: Dict[str, Any], request_id: str) -> Dict[str, Any]:
+        overall = audit_report.get("overall", {})
+
+        # Collect per-pillar violations for UI display.
+        triggered_pillars = []
+        for pillar_name, pillar_data in audit_report.get("pillars", {}).items():
+            report = pillar_data.get("report", {})
+            violations = MyelinAgentService._extract_violations(report)
+            if violations:
+                triggered_pillars.append({
+                    "pillar": pillar_name,
+                    "violations": violations
+                })
+
+        return {
+            "request_id": request_id,
+            "decision": overall.get("decision", "ALLOW"),
+            "risk_level": overall.get("risk_level", "LOW"),
+            "risk_score": overall.get("risk_score", 0.0),
+            "risk_factors": overall.get("risk_factors", []),
+            "triggered_pillars": triggered_pillars,
+        }
+
+    @staticmethod
+    def _extract_violations(report: Dict[str, Any]) -> list[Dict[str, Any]]:
+        extracted: list[Dict[str, Any]] = []
+
+        explicit = report.get("violations")
+        if isinstance(explicit, list):
+            for item in explicit:
+                if not isinstance(item, dict):
+                    continue
+                extracted.append({
+                    "rule": item.get("rule_name") or item.get("rule_id") or item.get("name", "Unknown Rule"),
+                    "reason": item.get("reason", ""),
+                    "severity": item.get("severity", ""),
+                })
+
+        details = report.get("details")
+        if isinstance(details, list):
+            for item in details:
+                if not isinstance(item, dict) or not item.get("violation"):
+                    continue
+
+                entry = {
+                    "rule": item.get("rule_name") or item.get("rule_id") or item.get("name", "Unknown Rule"),
+                    "reason": item.get("reason", ""),
+                    "severity": item.get("severity", ""),
+                }
+
+                if not any(
+                    existing.get("rule") == entry.get("rule") and existing.get("reason") == entry.get("reason")
+                    for existing in extracted
+                ):
+                    extracted.append(entry)
+
+        return extracted
+
+    @staticmethod
+    def _augment_structural_bias_signals(summary: Dict[str, Any], text: str) -> None:
+        lowered = (text or "").lower()
+
+        # Catch common hiring fairness risk phrasing that may not be covered by
+        # the conversational bias ruleset.
+        patterns = [
+            r"hiring algorithm",
+            r"ranks? candidates?",
+            r"certain universities?",
+            r"similar qualifications?",
+            r"disparate impact",
+            r"biased hiring",
+            r"selection bias",
+        ]
+
+        matches = sum(1 for p in patterns if re.search(p, lowered))
+        if matches < 2:
+            return
+
+        fairness_entry = {
+            "pillar": "fairness",
+            "violations": [
+                {
+                    "rule": "Structural Hiring Bias Signal",
+                    "reason": "Detected language indicating potential institutional preference in ranking decisions.",
+                    "severity": "medium",
+                }
+            ]
+        }
+
+        triggered = summary.setdefault("triggered_pillars", [])
+        if not any(item.get("pillar") == "fairness" for item in triggered if isinstance(item, dict)):
+            triggered.append(fairness_entry)
+
+        risk_factors = summary.setdefault("risk_factors", [])
+        factor_msg = "Potential structural hiring bias signal detected in selected text"
+        if factor_msg not in risk_factors:
+            risk_factors.append(factor_msg)
+
+        current_score = float(summary.get("risk_score", 0.0) or 0.0)
+        summary["risk_score"] = max(current_score, 0.45)
+
+        if summary.get("decision") == "ALLOW":
+            summary["decision"] = "WARN"
+        if summary.get("risk_level") in {None, "LOW", "UNKNOWN"}:
+            summary["risk_level"] = "MEDIUM"
 
     def _build_incident(
         self,

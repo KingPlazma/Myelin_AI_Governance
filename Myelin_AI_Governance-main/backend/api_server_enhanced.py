@@ -3,7 +3,7 @@ Enhanced MYELIN API Server with Custom Rules Support
 FastAPI server integrating authentication, custom rules, and enhanced auditing
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
@@ -71,10 +71,11 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=settings.get_trusted_hosts(),
 )
+_cors_origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=("*" not in _cors_origins),
     allow_methods=settings.get_cors_allow_methods(),
     allow_headers=settings.get_cors_allow_headers(),
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "Retry-After"],
@@ -226,7 +227,7 @@ async def health_check():
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/conversation", tags=["Comprehensive Audit"])
 @limiter.limit(LIMIT_AUDIT)
-async def audit_conversation(request_data: ConversationAuditRequest, request: Request):
+async def audit_conversation(request_data: ConversationAuditRequest, request: Request, response: Response):
     """
     Run comprehensive audit on a conversation (all applicable pillars)
     
@@ -283,7 +284,7 @@ async def audit_conversation(request_data: ConversationAuditRequest, request: Re
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/toxicity", tags=["Toxicity Pillar"])
 @limiter.limit(LIMIT_AUDIT)
-async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request):
+async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request, response: Response):
     """
     Run toxicity audit on conversation
     
@@ -326,7 +327,7 @@ async def audit_toxicity(request_data: ToxicityAuditRequest, request: Request):
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/governance", tags=["Governance Pillar"])
 @limiter.limit(LIMIT_AUDIT)
-async def audit_governance(request_data: GovernanceAuditRequest, request: Request):
+async def audit_governance(request_data: GovernanceAuditRequest, request: Request, response: Response):
     """
     Run governance compliance audit
     
@@ -367,7 +368,7 @@ async def audit_governance(request_data: GovernanceAuditRequest, request: Reques
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/bias", tags=["Bias Pillar"])
 @limiter.limit(LIMIT_AUDIT)
-async def audit_bias(request_data: BiasAuditRequest, request: Request):
+async def audit_bias(request_data: BiasAuditRequest, request: Request, response: Response):
     """
     Run bias detection audit
     
@@ -412,7 +413,7 @@ async def audit_bias(request_data: BiasAuditRequest, request: Request):
 
 @app.post(f"{settings.API_V1_PREFIX}/audit/batch/conversations", tags=["Batch Operations"])
 @limiter.limit(LIMIT_BATCH)
-async def batch_audit_conversations(requests: List[ConversationAuditRequest], request: Request):
+async def batch_audit_conversations(requests: List[ConversationAuditRequest], request: Request, response: Response):
     """
     Run batch conversation audits
     

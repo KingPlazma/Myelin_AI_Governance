@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>API Integration - Myelin</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .api-shell {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 32px 20px;
+            position: relative;
+            z-index: 3;
+        }
+
+        .api-card {
+            width: min(1040px, 100%);
+            background: rgba(19, 25, 35, 0.84);
+            border: 1px solid rgba(132, 155, 186, 0.24);
+            border-radius: 24px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+            padding: 40px 28px;
+            text-align: center;
+        }
+
+        .api-card h1 {
+            font-family: "Rockwell", "Cambria", serif;
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            margin-bottom: 10px;
+        }
+
+        .api-subtitle {
+            color: var(--muted);
+            max-width: 860px;
+            margin: 0 auto 26px;
+            line-height: 1.7;
+        }
+
+        .api-icon {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            margin: 8px auto 20px;
+            display: block;
+            filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.35));
+        }
+
+        .panel {
+            margin: 0 auto 22px;
+            max-width: 900px;
+            text-align: left;
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(168, 191, 220, 0.28);
+        }
+
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 1.35rem;
+            color: #f4f8ff;
+        }
+
+        .panel ul,
+        .panel ol {
+            margin: 0;
+            padding-left: 24px;
+            color: #dfe8f4;
+            line-height: 1.62;
+        }
+
+        .panel li {
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            color: #f8fbff;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .why-label {
+            color: #f8fbff;
+            font-weight: 700;
+        }
+
+        .api-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 720px) {
+            .api-card {
+                padding: 28px 18px;
+            }
+
+            .panel {
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <canvas id="particles"></canvas>
+
+    <div class="logo">
+        <img src="../assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <main class="api-shell">
+        <section class="api-card">
+            <h1>API Integration Overview</h1>
+            <img src="../assets/img/core 2.png" class="api-icon" alt="API integration icon" />
+            <p class="api-subtitle">
+                Our API Integration service allows your website or application to connect directly with the Myelin AI Governance agent.
+                This gives your platform real-time access to intelligent governance, monitoring, alerting, and compliance workflows
+                through a secure, scalable interface.
+            </p>
+
+            <article class="panel">
+                <h2>What it delivers</h2>
+                <ul>
+                    <li>Secure data exchange between your website and the AI governance backend.</li>
+                    <li>Real-time incident detection, reporting, and remediation.</li>
+                    <li>Automated governance workflows that adapt to policy changes.</li>
+                    <li>Enterprise-grade availability for continuous operation.</li>
+                </ul>
+            </article>
+
+            <article class="panel">
+                <h2>Why Integrate with Our API</h2>
+                <ul>
+                    <li><span class="why-label">Fast deployment:</span> Embed governance capabilities into your site with minimal development effort.</li>
+                    <li><span class="why-label">Reliable operations:</span> Our agent can run 24/7 to keep your application monitored continuously.</li>
+                    <li><span class="why-label">Customizable workflows:</span> Tailor alerts, checks, and rules to your business needs.</li>
+                    <li><span class="why-label">Developer-friendly:</span> Clean RESTful endpoints, clear authentication, and structured responses.</li>
+                </ul>
+            </article>
+
+            <article class="panel">
+                <h2>API Integration Steps</h2>
+                <ol>
+                    <li>
+                        <span class="step-title">Review Documentation</span>
+                        Read the API reference and developer guide. Confirm required endpoints, request formats, and authentication methods.
+                    </li>
+                    <li>
+                        <span class="step-title">Set Up Authentication</span>
+                        Obtain API keys or service credentials. Configure secure storage of keys on your server or backend environment.
+                    </li>
+                    <li>
+                        <span class="step-title">Connect to the API</span>
+                        Add HTTP clients in your web application or backend. Implement calls to the governance API endpoints for the desired functionality.
+                    </li>
+                    <li>
+                        <span class="step-title">Send Data</span>
+                        Send event, policy, and system metadata to the API. Use structured JSON payloads to ensure accurate processing.
+                    </li>
+                    <li>
+                        <span class="step-title">Handle Responses</span>
+                        Parse API responses for status, alerts, and recommended actions. Display results or trigger workflows in your UI or backend logic.
+                    </li>
+                    <li>
+                        <span class="step-title">Test and Validate</span>
+                        Run integration tests to confirm connectivity and response handling. Verify that governance rules are enforced correctly.
+                    </li>
+                    <li>
+                        <span class="step-title">Deploy Securely</span>
+                        Deploy integration in a staging environment first. Monitor logs, ensure error handling, and then move to production.
+                    </li>
+                </ol>
+            </article>
+
+            <div class="api-actions">
+                <a href="../index.html" class="btn secondary">Back to Home</a>
+                <a href="../index.html#api-access" class="btn primary">Go to API Access</a>
+            </div>
+        </section>
+    </main>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

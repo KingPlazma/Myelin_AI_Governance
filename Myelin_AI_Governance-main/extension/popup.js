@@ -1,8 +1,8 @@
 'use strict';
 
 const defaults = {
-  mode: 'agent',
-  agentUrl: 'http://localhost:9000/v1/chat/completions',
+  mode: 'audit',
+  agentUrl: 'http://localhost:9000/v1/audit/text',
   auditUrl: 'http://localhost:8000/api/v1/audit/conversation',
   model: 'llama3.1:8b',
   temperature: '0.2',
@@ -66,7 +66,6 @@ const els = {
   prompt: document.getElementById("prompt"),
   status: document.getElementById("status"),
   pageMeta: document.getElementById("pageMeta"),
-  responseBox: document.getElementById("responseBox"),
   auditBox: document.getElementById("auditBox"),
   useSelection: document.getElementById("useSelection"),
   usePage: document.getElementById("usePage"),
@@ -140,6 +139,21 @@ function normalizeError(error) {
   return message;
 }
 
+function isNetworkFetchError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return (
+    error instanceof TypeError ||
+    message.includes('failed to fetch') ||
+    message.includes('networkerror') ||
+    message.includes('load failed') ||
+    message.includes('unable to connect')
+  );
+}
+
+function buildEndpointReachabilityError(url) {
+  return `Could not reach ${url}. Start that local service, or switch mode to Audit API (port 8000).`;
+}
+
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), getTimeoutMs());
@@ -188,31 +202,98 @@ async function saveSettings() {
 
 function buildAuditSummaryFromAuditApi(result) {
   const overall = result?.overall || {};
-  return {
+  const summary = {
     decision: overall.decision || "UNKNOWN",
     risk_level: overall.risk_level || "UNKNOWN",
     risk_score: overall.risk_score ?? null,
-    risk_factors: overall.risk_factors || [],
+    risk_factors: [...(overall.risk_factors || [])],
     pillars: Object.keys(result?.pillars || {})
   };
-}
 
-function buildAuditSummaryFromAgent(result) {
-  const audit = result?.myelin || result?.myelin_audit || null;
-  if (!audit) {
-    return {
-      note: "The agent returned a response but did not attach explicit Myelin audit metadata for this request."
-    };
+  const textForHeuristics = `${result?.input?.user || ''} ${result?.input?.bot || ''}`.toLowerCase();
+  const toxicityHeuristic = /\b(bitch|idiot|stupid|moron|asshole|slur|kill yourself|hate you)\b/i;
+  const factualStatus = result?.pillars?.factual?.status;
+
+  // Guardrail against obvious false-negatives from local/offline rule packs.
+  if (summary.decision === 'ALLOW' && toxicityHeuristic.test(textForHeuristics)) {
+    summary.decision = 'REVIEW';
+    summary.risk_level = 'MEDIUM';
+    summary.risk_score = Math.max(Number(summary.risk_score || 0), 0.35);
+    summary.risk_factors.push('Detected toxic phrasing via client-side heuristic');
   }
-  return audit;
+
+  if (factualStatus === 'error' && summary.decision === 'ALLOW') {
+    summary.decision = 'REVIEW';
+    summary.risk_level = 'MEDIUM';
+    summary.risk_score = Math.max(Number(summary.risk_score || 0), 0.30);
+    summary.risk_factors.push('Factual pillar error; manual review recommended');
+  }
+
+  return summary;
 }
 
-async function runAgentMode(text) {
-  const urlRaw = els.agentUrl.value.trim();
+function buildPromptAuditSummaryFromAgent(result) {
+  if (result?.myelin_prompt) {
+    return result.myelin_prompt;
+  }
+  if (result?.myelin?.stage === 'prompt') {
+    return result.myelin;
+  }
+  return null;
+}
+
+function getAgentTextAuditUrl(rawUrl) {
+  const endpoint = new URL(rawUrl);
+  endpoint.pathname = '/v1/audit/text';
+  endpoint.search = '';
+  endpoint.hash = '';
+  return endpoint.toString();
+}
+
+async function runTextAudit(text) {
+  const urlRaw = els.auditUrl.value.trim();
 
   // ── Security: block requests to non-allowlisted origins ──
   if (!(await isAllowedUrl(urlRaw))) {
     throw new Error(`Blocked: '${urlRaw}' is not an allowed API endpoint. Check your settings.`);
+  }
+
+  const apiKey = els.auditApiKey.value.trim();
+  if (apiKey && !validateApiKey(apiKey)) {
+    throw new Error('Invalid API key format. Please re-enter your audit API key.');
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['X-API-Key'] = apiKey;
+
+  const res = await fetchWithTimeout(urlRaw, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      // Audit the selected text directly, not the generated model response.
+      user_input: text,
+      bot_response: text,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(stringify(data.detail || data || `HTTP ${res.status}`));
+  }
+
+  return {
+    audit: buildAuditSummaryFromAuditApi(data),
+    raw: data,
+  };
+}
+
+async function runAgentMode(text) {
+  const urlRaw = els.agentUrl.value.trim();
+  const endpointUrl = getAgentTextAuditUrl(urlRaw);
+
+  // ── Security: block requests to non-allowlisted origins ──
+  if (!(await isAllowedUrl(endpointUrl))) {
+    throw new Error(`Blocked: '${endpointUrl}' is not an allowed API endpoint. Check your settings.`);
   }
 
   const apiKey = els.agentApiKey.value.trim();
@@ -223,13 +304,11 @@ async function runAgentMode(text) {
   const headers = { 'Content-Type': 'application/json' };
   if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
-  const res = await fetchWithTimeout(urlRaw, {
+  const res = await fetchWithTimeout(endpointUrl, {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      model: els.model.value.trim(),
-      temperature: Number(els.temperature.value || defaults.temperature),
-      messages: [{ role: 'user', content: text }],
+      text,
     }),
   });
 
@@ -238,10 +317,18 @@ async function runAgentMode(text) {
     throw new Error(stringify(data.detail || data || `HTTP ${res.status}`));
   }
 
+  const selectedTextAudit = buildPromptAuditSummaryFromAgent(data);
+  if (!selectedTextAudit) {
+    throw new Error(
+      'Selected-text audit metadata is missing from the agent response. Restart the Myelin agent with the latest code.'
+    );
+  }
+
   return {
-    responseText: data?.choices?.[0]?.message?.content || 'No response content returned.',
-    audit: buildAuditSummaryFromAgent(data),
-    raw: data,
+    audit: selectedTextAudit,
+    raw: {
+      agent: data,
+    },
   };
 }
 
@@ -265,7 +352,7 @@ async function runAuditMode(text) {
     method: 'POST',
     headers,
     body: JSON.stringify({
-      user_input: 'Browser extension audit request',
+      user_input: text,
       bot_response: text,
     }),
   });
@@ -276,7 +363,6 @@ async function runAuditMode(text) {
   }
 
   return {
-    responseText: 'Audit completed successfully.',
     audit: buildAuditSummaryFromAuditApi(data),
     raw: data,
   };
@@ -314,9 +400,6 @@ async function runAction() {
   }
 
   setStatus('Running Myelin...', 'running');
-  // ── Security: use textContent (never innerHTML) so API responses
-  // containing HTML cannot execute as markup in the popup ──
-  els.responseBox.textContent = 'Waiting for Myelin response...';
   els.auditBox.textContent = 'Request sent. This can take 10-20 seconds on a local model.';
 
   const startedAt = Date.now();
@@ -326,17 +409,35 @@ async function runAction() {
   }, 1000);
 
   try {
-    const result = els.mode.value === 'audit'
-      ? await runAuditMode(text)
-      : await runAgentMode(text);
+    let result;
+    if (els.mode.value === 'audit') {
+      result = await runAuditMode(text);
+    } else {
+      try {
+        result = await runAgentMode(text);
+      } catch (agentError) {
+        if (!isNetworkFetchError(agentError)) {
+          throw agentError;
+        }
+
+        // Agent proxy is down; automatically fall back to direct audit API.
+        try {
+          result = await runAuditMode(text);
+          window.clearInterval(progressTimer);
+          els.auditBox.textContent = stringify(result.audit);
+          setStatus('Completed (Audit fallback)', 'success');
+          return;
+        } catch (_auditError) {
+          throw new Error(buildEndpointReachabilityError(els.agentUrl.value.trim()));
+        }
+      }
+    }
 
     window.clearInterval(progressTimer);
-    els.responseBox.textContent = result.responseText;   // textContent — safe
     els.auditBox.textContent = stringify(result.audit);  // textContent — safe
     setStatus('Completed', 'success');
   } catch (error) {
     window.clearInterval(progressTimer);
-    els.responseBox.textContent = 'Request failed.';
     els.auditBox.textContent = normalizeError(error);
     setStatus('Request failed', 'error');
   }
@@ -359,10 +460,8 @@ async function checkService() {
       throw new Error(stringify(data.detail || data || `HTTP ${response.status}`));
     }
     els.auditBox.textContent = stringify(data);
-    els.responseBox.textContent = "Service connectivity check passed.";
     setStatus("Service reachable", "success");
   } catch (error) {
-    els.responseBox.textContent = "Service check failed.";
     els.auditBox.textContent = normalizeError(error);
     setStatus("Service unreachable", "error");
   }

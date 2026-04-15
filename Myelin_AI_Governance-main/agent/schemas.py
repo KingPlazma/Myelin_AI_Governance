@@ -16,6 +16,10 @@ class ChatCompletionRequest(BaseModel):
     max_tokens: Optional[int] = None
 
 
+class TextAuditRequest(BaseModel):
+    text: str
+
+
 class HealthResponse(BaseModel):
     status: str
     service: str

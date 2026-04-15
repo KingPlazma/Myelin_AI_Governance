@@ -1,0 +1,409 @@
+[
+    {
+        "module": "toxicity",
+        "timestamp": "2026-01-10T13:52:31.360294",
+        "toxicity_score": 0.8,
+        "risk_level": "HIGH",
+        "decision": "WARN",
+        "violated_categories": [
+            "Abusive Speech"
+        ],
+        "violations": [
+            {
+                "violation": true,
+                "rule_id": "TOX-03",
+                "rule_name": "Harassment",
+                "category": "Abusive Speech",
+                "severity": "HIGH",
+                "confidence": 0.92,
+                "trigger_span": "stupid",
+                "reason": "Harassing language detected",
+                "weight": 0.8
+            }
+        ],
+        "details": [
+            {
+                "rule_name": "Explicit Hate Speech",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Threats of Violence",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Harassment",
+                "violation": true,
+                "reason": "Harassing language detected",
+                "score": 0.8
+            },
+            {
+                "rule_name": "Self-Harm",
+                "violation": false,
+                "reason": "No self-harm content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Illegal Activity",
+                "violation": false,
+                "reason": "No illegal content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Implicit Hate Speech",
+                "violation": false,
+                "reason": "No implicit hate",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Bullying / Repeated Aggression",
+                "violation": false,
+                "reason": "No bullying pattern",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Self Harm Encouragement",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Emotional Manipulation",
+                "violation": false,
+                "reason": "No emotional manipulation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Criminal Instruction",
+                "violation": false,
+                "reason": "No criminal guidance",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Violence Enablement",
+                "violation": false,
+                "reason": "No violence enablement",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Extremism Support",
+                "violation": false,
+                "reason": "No extremist support",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Child Exploitation",
+                "violation": false,
+                "reason": "No child exploitation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Medical Misinformation",
+                "violation": false,
+                "reason": "No medical harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Drug Abuse",
+                "violation": false,
+                "reason": "No drug abuse",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Public Panic",
+                "violation": false,
+                "reason": "No public harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Doxxing",
+                "violation": false,
+                "reason": "No PII detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Fraud / Scam",
+                "violation": false,
+                "reason": "No fraud detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "AI Contextual Analysis",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Sexual Harassment",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            }
+        ]
+    },
+    {
+        "module": "toxicity",
+        "timestamp": "2026-01-10T13:52:31.378135",
+        "toxicity_score": 0.0,
+        "risk_level": "LOW",
+        "decision": "ALLOW",
+        "violated_categories": [],
+        "violations": [],
+        "details": [
+            {
+                "rule_name": "Explicit Hate Speech",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Threats of Violence",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Harassment",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Self-Harm",
+                "violation": false,
+                "reason": "No self-harm content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Illegal Activity",
+                "violation": false,
+                "reason": "No illegal content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Implicit Hate Speech",
+                "violation": false,
+                "reason": "No implicit hate",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Bullying / Repeated Aggression",
+                "violation": false,
+                "reason": "No bullying pattern",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Self Harm Encouragement",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Emotional Manipulation",
+                "violation": false,
+                "reason": "No emotional manipulation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Criminal Instruction",
+                "violation": false,
+                "reason": "No criminal guidance",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Violence Enablement",
+                "violation": false,
+                "reason": "No violence enablement",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Extremism Support",
+                "violation": false,
+                "reason": "No extremist support",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Child Exploitation",
+                "violation": false,
+                "reason": "No child exploitation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Medical Misinformation",
+                "violation": false,
+                "reason": "No medical harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Drug Abuse",
+                "violation": false,
+                "reason": "No drug abuse",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Public Panic",
+                "violation": false,
+                "reason": "No public harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Doxxing",
+                "violation": false,
+                "reason": "No PII detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Fraud / Scam",
+                "violation": false,
+                "reason": "No fraud detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "AI Contextual Analysis",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Sexual Harassment",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            }
+        ]
+    },
+    {
+        "module": "toxicity",
+        "timestamp": "2026-01-10T13:52:31.391944",
+        "toxicity_score": 0.0,
+        "risk_level": "LOW",
+        "decision": "ALLOW",
+        "violated_categories": [],
+        "violations": [],
+        "details": [
+            {
+                "rule_name": "Explicit Hate Speech",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Threats of Violence",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Harassment",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Self-Harm",
+                "violation": false,
+                "reason": "No self-harm content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Illegal Activity",
+                "violation": false,
+                "reason": "No illegal content",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Implicit Hate Speech",
+                "violation": false,
+                "reason": "No implicit hate",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Bullying / Repeated Aggression",
+                "violation": false,
+                "reason": "No bullying pattern",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Self Harm Encouragement",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Emotional Manipulation",
+                "violation": false,
+                "reason": "No emotional manipulation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Criminal Instruction",
+                "violation": false,
+                "reason": "No criminal guidance",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Violence Enablement",
+                "violation": false,
+                "reason": "No violence enablement",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Extremism Support",
+                "violation": false,
+                "reason": "No extremist support",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Child Exploitation",
+                "violation": false,
+                "reason": "No child exploitation",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Medical Misinformation",
+                "violation": false,
+                "reason": "No medical harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Drug Abuse",
+                "violation": false,
+                "reason": "No drug abuse",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Public Panic",
+                "violation": false,
+                "reason": "No public harm",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Doxxing",
+                "violation": false,
+                "reason": "No PII detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Fraud / Scam",
+                "violation": false,
+                "reason": "No fraud detected",
+                "score": 0.0
+            },
+            {
+                "rule_name": "AI Contextual Analysis",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            },
+            {
+                "rule_name": "Sexual Harassment",
+                "violation": false,
+                "reason": "N/A",
+                "score": 0.0
+            }
+        ]
+    }
+]

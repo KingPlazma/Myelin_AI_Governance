@@ -1,0 +1,16 @@
+[Unit]
+Description=Myelin Sentinel Agent
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/myelin/Myelin_AI_Governance-main/agent
+EnvironmentFile=/opt/myelin/Myelin_AI_Governance-main/agent/.env
+ExecStart=/opt/myelin/Myelin_AI_Governance-main/.venv/bin/python run_agent.py
+Restart=always
+RestartSec=5
+User=myelin
+Group=myelin
+
+[Install]
+WantedBy=multi-user.target

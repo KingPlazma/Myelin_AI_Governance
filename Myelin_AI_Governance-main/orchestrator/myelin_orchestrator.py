@@ -5,8 +5,9 @@ Integrates all 4 pillars: Fairness, Factual Check, Toxicity, and Governance
 
 import sys
 import os
+import importlib
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Protocol, Tuple
 import logging
 
 # Setup logging
@@ -17,6 +18,31 @@ logging.basicConfig(
 logger = logging.getLogger("MyelinOrchestrator")
 
 
+class FairnessModule(Protocol):
+    def run(self, y_true: List[int], y_pred: List[int], sensitive: List[int]) -> Dict[str, Any]:
+        ...
+
+
+class FactualModule(Protocol):
+    def evaluate(self, model_output: str, source_text: Optional[str] = None) -> Tuple[float, Dict[str, Any]]:
+        ...
+
+
+class FactualMetaRule(Protocol):
+    def evaluate(
+        self,
+        model_output: str,
+        source_text: Optional[str] = None,
+        final_score: Optional[float] = None,
+    ) -> Tuple[float, Any]:
+        ...
+
+
+class ConversationAuditModule(Protocol):
+    def run_full_audit(self, user_input: str, bot_response: str) -> Dict[str, Any]:
+        ...
+
+
 class MyelinOrchestrator:
     """
     Central orchestrator that coordinates all MYELIN pillars.
@@ -25,13 +51,20 @@ class MyelinOrchestrator:
     
     def __init__(self):
         """Initialize all pillar modules"""
-        self.fairness_module = None
-        self.factual_module = None
-        self.toxicity_module = None
-        self.governance_module = None
-        self.bias_module = None
+        self.fairness_module: FairnessModule = self._create_mock_fairness()
+        self.factual_module: FactualModule = self._create_mock_factual()
+        self.toxicity_module: ConversationAuditModule = self._create_mock_toxicity()
+        self.governance_module: ConversationAuditModule = self._create_mock_governance()
+        self.bias_module: ConversationAuditModule = self._create_mock_bias()
+        self.factual_meta_rule: Optional[FactualMetaRule] = None
         
         self._initialize_modules()
+
+    @staticmethod
+    def _load_symbol(module_path: str, symbol_name: str) -> Any:
+        """Load symbol dynamically to support pluggable module trees."""
+        module = importlib.import_module(module_path)
+        return getattr(module, symbol_name)
     
     def _initialize_modules(self):
         """Dynamically load all pillar modules with graceful error handling"""
@@ -44,7 +77,7 @@ class MyelinOrchestrator:
         try:
             fairness_path = os.path.join(base_path, "Myelin_Fairness_Pillar_RICH_FINAL")
             sys.path.insert(0, fairness_path)
-            from ensemble import FairnessEnsemble
+            FairnessEnsemble = self._load_symbol("ensemble", "FairnessEnsemble")
             self.fairness_module = FairnessEnsemble(os.path.join(fairness_path, "rules"))
             logger.info("✅ Fairness Pillar loaded")
         except Exception as e:
@@ -58,51 +91,39 @@ class MyelinOrchestrator:
             sys.path.insert(0, fcam_path)
             sys.path.insert(0, os.path.join(fcam_path, "modules"))
             
-            # Import all FCAM rules
-            from modules.factual.rules.rule_01_source_alignment import SourceAlignmentRule
-            from modules.factual.rules.rule_02_atomic_claims import AtomicClaimDecompositionRule
-            from modules.factual.rules.rule_03_claim_verification import ClaimLevelVerificationRule
-            from modules.factual.rules.rule_04_qa_consistency import QABasedConsistencyRule
-            from modules.factual.rules.rule_05_coverage import CoverageCompletenessRule
-            from modules.factual.rules.rule_06_stability import MetamorphicStabilityRule
-            from modules.factual.rules.rule_07_multilingual_consistency import MultilingualConsistencyRule
-            from modules.factual.rules.rule_08_external_knowledge import ExternalKnowledgeVerificationRule
-            from modules.factual.rules.rule_09_token_validation import TokenValidationRule
-            from modules.factual.rules.rule_10_token_correction import TokenCorrectionRule
-            from modules.factual.rules.rule_11_numerical_consistency import NumericalConsistencyRule
-            from modules.factual.rules.rule_12_temporal_consistency import TemporalConsistencyRule
-            from modules.factual.rules.rule_13_entity_consistency import EntityConsistencyRule
-            from modules.factual.rules.rule_14_causal_consistency import CausalConsistencyRule
-            from modules.factual.rules.rule_15_internal_consistency import InternalConsistencyRule
-            from modules.factual.rules.rule_16_severity import HallucinationSeverityRule
-            from modules.factual.rules.rule_17_uncertainty import UncertaintySignalingRule
-            from modules.factual.rules.rule_18_cross_model import CrossModelAgreementRule
-            from modules.factual.rules.rule_19_domain_sensitivity import DomainSensitivityRule
-            from modules.factual.rules.rule_20_final_decision import FinalFactualConfidenceRule
-            from modules.factual.ensemble_manager import FactualEnsembleManager
-            
-            fcam_rules = [
-                SourceAlignmentRule(),
-                AtomicClaimDecompositionRule(),
-                ClaimLevelVerificationRule(),
-                QABasedConsistencyRule(),
-                CoverageCompletenessRule(),
-                MetamorphicStabilityRule(),
-                MultilingualConsistencyRule(),
-                ExternalKnowledgeVerificationRule(),
-                TokenValidationRule(),
-                TokenCorrectionRule(),
-                NumericalConsistencyRule(),
-                TemporalConsistencyRule(),
-                EntityConsistencyRule(),
-                CausalConsistencyRule(),
-                InternalConsistencyRule(),
-                HallucinationSeverityRule(),
-                UncertaintySignalingRule(),
-                CrossModelAgreementRule(),
-                DomainSensitivityRule()
+            rule_specs = [
+                ("modules.factual.rules.rule_01_source_alignment", "SourceAlignmentRule"),
+                ("modules.factual.rules.rule_02_atomic_claims", "AtomicClaimDecompositionRule"),
+                ("modules.factual.rules.rule_03_claim_verification", "ClaimLevelVerificationRule"),
+                ("modules.factual.rules.rule_04_qa_consistency", "QABasedConsistencyRule"),
+                ("modules.factual.rules.rule_05_coverage", "CoverageCompletenessRule"),
+                ("modules.factual.rules.rule_06_stability", "MetamorphicStabilityRule"),
+                ("modules.factual.rules.rule_07_multilingual_consistency", "MultilingualConsistencyRule"),
+                ("modules.factual.rules.rule_08_external_knowledge", "ExternalKnowledgeVerificationRule"),
+                ("modules.factual.rules.rule_09_token_validation", "TokenValidationRule"),
+                ("modules.factual.rules.rule_10_token_correction", "TokenCorrectionRule"),
+                ("modules.factual.rules.rule_11_numerical_consistency", "NumericalConsistencyRule"),
+                ("modules.factual.rules.rule_12_temporal_consistency", "TemporalConsistencyRule"),
+                ("modules.factual.rules.rule_13_entity_consistency", "EntityConsistencyRule"),
+                ("modules.factual.rules.rule_14_causal_consistency", "CausalConsistencyRule"),
+                ("modules.factual.rules.rule_15_internal_consistency", "InternalConsistencyRule"),
+                ("modules.factual.rules.rule_16_severity", "HallucinationSeverityRule"),
+                ("modules.factual.rules.rule_17_uncertainty", "UncertaintySignalingRule"),
+                ("modules.factual.rules.rule_18_cross_model", "CrossModelAgreementRule"),
+                ("modules.factual.rules.rule_19_domain_sensitivity", "DomainSensitivityRule"),
             ]
-            
+
+            fcam_rules = [
+                self._load_symbol(module_path, class_name)()
+                for module_path, class_name in rule_specs
+            ]
+
+            FinalFactualConfidenceRule = self._load_symbol(
+                "modules.factual.rules.rule_20_final_decision",
+                "FinalFactualConfidenceRule",
+            )
+            FactualEnsembleManager = self._load_symbol("modules.factual.ensemble_manager", "FactualEnsembleManager")
+
             self.factual_module = FactualEnsembleManager(fcam_rules)
             self.factual_meta_rule = FinalFactualConfidenceRule()
             logger.info("✅ Factual Check Pillar (FCAM) loaded")
@@ -120,7 +141,7 @@ class MyelinOrchestrator:
             
             self._clear_module_namespace("modules")
             
-            from modules.toxicity.ensemble_manager import ToxicityEnsembleManager
+            ToxicityEnsembleManager = self._load_symbol("modules.toxicity.ensemble_manager", "ToxicityEnsembleManager")
             self.toxicity_module = ToxicityEnsembleManager()
             logger.info("✅ Toxicity Pillar loaded")
         except Exception as e:
@@ -136,7 +157,7 @@ class MyelinOrchestrator:
             
             self._clear_module_namespace("modules")
             
-            from modules.governance.ensemble_manager import GovernanceEnsembleManager
+            GovernanceEnsembleManager = self._load_symbol("modules.governance.ensemble_manager", "GovernanceEnsembleManager")
             self.governance_module = GovernanceEnsembleManager()
             logger.info("✅ Governance Pillar loaded")
         except Exception as e:
@@ -152,7 +173,7 @@ class MyelinOrchestrator:
             
             self._clear_module_namespace("modules")
             
-            from modules.bias.ensemble_manager import BiasEnsembleManager
+            BiasEnsembleManager = self._load_symbol("modules.bias.ensemble_manager", "BiasEnsembleManager")
             self.bias_module = BiasEnsembleManager()
             logger.info("✅ Bias Pillar loaded")
         except Exception as e:
@@ -171,7 +192,7 @@ class MyelinOrchestrator:
         for module_name in stale_modules:
             del sys.modules[module_name]
     
-    def _create_mock_fairness(self):
+    def _create_mock_fairness(self) -> FairnessModule:
         """Create mock fairness module"""
         class MockFairness:
             def run(self, y_true, y_pred, sensitive):
@@ -184,14 +205,14 @@ class MyelinOrchestrator:
                 }
         return MockFairness()
     
-    def _create_mock_factual(self):
+    def _create_mock_factual(self) -> FactualModule:
         """Create mock factual module"""
         class MockFactual:
             def evaluate(self, model_output, source_text=None):
                 return 0.5, {"note": "Factual pillar not available - install dependencies"}
         return MockFactual()
     
-    def _create_mock_toxicity(self):
+    def _create_mock_toxicity(self) -> ConversationAuditModule:
         """Create mock toxicity module"""
         class MockToxicity:
             def run_full_audit(self, user_input, bot_response):
@@ -207,7 +228,7 @@ class MyelinOrchestrator:
                 }
         return MockToxicity()
     
-    def _create_mock_governance(self):
+    def _create_mock_governance(self) -> ConversationAuditModule:
         """Create mock governance module"""
         class MockGovernance:
             def run_full_audit(self, user_input, bot_response):
@@ -218,7 +239,7 @@ class MyelinOrchestrator:
                 }
         return MockGovernance()
     
-    def _create_mock_bias(self):
+    def _create_mock_bias(self) -> ConversationAuditModule:
         """Create mock bias module"""
         class MockBias:
             def run_full_audit(self, user_input, bot_response):
@@ -460,10 +481,33 @@ class MyelinOrchestrator:
         # Calculate overall risk score
         risk_score = 0.0
         risk_factors = []
+        minimum_decision = "ALLOW"
+
+        decision_rank = {
+            "ALLOW": 0,
+            "REVIEW": 1,
+            "WARN": 2,
+            "BLOCK": 3,
+        }
+
+        def _raise_minimum_decision(target_decision: str):
+            nonlocal minimum_decision
+            current_rank = decision_rank.get(minimum_decision, 0)
+            target_rank = decision_rank.get(target_decision, 0)
+            if target_rank > current_rank:
+                minimum_decision = target_decision
         
         if toxicity_result["status"] == "success":
             tox_score = toxicity_result["report"].get("toxicity_score", 0)
             risk_score += tox_score * 0.35  # 35% weight
+            tox_decision = toxicity_result["report"].get("decision", "ALLOW")
+
+            # Prevent unsafe downgrades when toxicity engine already escalated.
+            if tox_decision == "ALLOW_WITH_CAUTION":
+                _raise_minimum_decision("REVIEW")
+            elif tox_decision in decision_rank:
+                _raise_minimum_decision(tox_decision)
+
             if tox_score > 0.5:
                 risk_factors.append(f"High toxicity detected ({tox_score})")
         
@@ -474,7 +518,10 @@ class MyelinOrchestrator:
                 risk_factors.append(f"Governance violations ({gov_score})")
         
         if bias_result["status"] == "success":
-            bias_score = bias_result["report"].get("bias_score", 0)
+            bias_score = bias_result["report"].get(
+                "bias_score",
+                bias_result["report"].get("global_bias_index", 0),
+            )
             risk_score += bias_score * 0.20  # 20% weight
             if bias_score > 0.5:
                 risk_factors.append(f"Bias detected ({bias_score})")
@@ -484,6 +531,9 @@ class MyelinOrchestrator:
             risk_score += fact_score * 0.20  # 20% weight
             if fact_score > 0.5:
                 risk_factors.append(f"Low factual accuracy ({factual_result.get('final_score', 0)})")
+        else:
+            _raise_minimum_decision("REVIEW")
+            risk_factors.append("Factual engine failed; manual review required")
         
         # Determine overall decision
         if risk_score >= 0.7:
@@ -498,6 +548,18 @@ class MyelinOrchestrator:
         else:
             decision = "ALLOW"
             risk_level = "LOW"
+
+        # Enforce minimum escalation derived from pillar-level outcomes.
+        if decision_rank.get(minimum_decision, 0) > decision_rank.get(decision, 0):
+            decision = minimum_decision
+            if decision == "BLOCK":
+                risk_level = "CRITICAL"
+            elif decision == "WARN":
+                risk_level = "HIGH"
+            elif decision == "REVIEW":
+                risk_level = "MEDIUM"
+            else:
+                risk_level = "LOW"
         
         results["overall"] = {
             "risk_score": round(risk_score, 3),
@@ -558,7 +620,7 @@ class MyelinOrchestrator:
 
 
 # Singleton instance
-_orchestrator_instance = None
+_orchestrator_instance: Optional[MyelinOrchestrator] = None
 
 def get_orchestrator() -> MyelinOrchestrator:
     """Get or create the singleton orchestrator instance"""

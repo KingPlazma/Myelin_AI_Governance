@@ -1,0 +1,98 @@
+2026-04-10 12:01:43,764 [INFO] MyelinOrchestrator: \u2705 Fairness Pillar loaded
+2026-04-10 12:01:44,020 [INFO] MyelinOrchestrator: \u2705 Factual Check Pillar (FCAM) loaded
+2026-04-10 12:01:44,028 [INFO] EnsembleManager: Successfully registered: RuleExplicitHate
+2026-04-10 12:01:44,029 [INFO] EnsembleManager: Successfully registered: RuleThreats
+2026-04-10 12:01:44,030 [INFO] EnsembleManager: Successfully registered: RuleHarassment
+2026-04-10 12:01:44,030 [INFO] EnsembleManager: Successfully registered: RuleSelfHarm
+2026-04-10 12:01:44,037 [INFO] EnsembleManager: Successfully registered: RuleIllegalActs
+2026-04-10 12:01:44,037 [INFO] EnsembleManager: Successfully registered: RuleImplicitHate
+2026-04-10 12:01:44,038 [INFO] EnsembleManager: Successfully registered: RuleBullying
+2026-04-10 12:01:44,038 [INFO] EnsembleManager: Successfully registered: RuleSelfHarmEncouragement
+2026-04-10 12:01:44,044 [INFO] EnsembleManager: Successfully registered: RuleEmotionalManipulation
+2026-04-10 12:01:44,045 [INFO] EnsembleManager: Successfully registered: RuleCriminalInstruction
+2026-04-10 12:01:44,046 [INFO] EnsembleManager: Successfully registered: RuleViolenceEnablement
+2026-04-10 12:01:44,048 [INFO] EnsembleManager: Successfully registered: RuleExtremism
+2026-04-10 12:01:44,049 [INFO] EnsembleManager: Successfully registered: RuleChildExploitation
+2026-04-10 12:01:44,051 [INFO] EnsembleManager: Successfully registered: RuleMedicalMisinformation
+2026-04-10 12:01:44,051 [INFO] EnsembleManager: Successfully registered: RuleDrugAbuse
+2026-04-10 12:01:44,055 [INFO] EnsembleManager: Successfully registered: RulePublicPanic
+2026-04-10 12:01:44,056 [INFO] EnsembleManager: Successfully registered: RuleDoxxing
+2026-04-10 12:01:44,059 [INFO] EnsembleManager: Successfully registered: RuleFraud
+2026-04-10 12:01:44,070 [INFO] EnsembleManager: Successfully registered: RuleAIJudgement
+2026-04-10 12:01:44,071 [INFO] EnsembleManager: Successfully registered: Rule20SexualHarassment
+2026-04-10 12:01:44,073 [INFO] EnsembleManager: Full suite of 20 rules verified and active.
+2026-04-10 12:01:44,073 [INFO] MyelinOrchestrator: \u2705 Toxicity Pillar loaded
+2026-04-10 12:01:44,087 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_01_pii_leakage.py
+2026-04-10 12:01:44,088 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_02_financial_leakage.py
+2026-04-10 12:01:44,098 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_03_secrets_leakage.py
+2026-04-10 12:01:44,105 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_04_anonymization.py
+2026-04-10 12:01:44,110 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_05_right_to_be_forgotten.py
+2026-04-10 12:01:44,113 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_06_identity_disclosure.py
+2026-04-10 12:01:44,114 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_07_age_gating.py
+2026-04-10 12:01:44,114 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_08_transparency.py
+2026-04-10 12:01:44,118 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_09_medical_advice.py
+2026-04-10 12:01:44,122 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_10_financial_advice.py
+2026-04-10 12:01:44,123 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_11_legal_advice.py
+2026-04-10 12:01:44,126 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_12_crisis_resources.py
+2026-04-10 12:01:44,127 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_13_prompt_injection.py
+2026-04-10 12:01:44,129 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_14_jailbreak_detector.py
+2026-04-10 12:01:44,133 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_15_malicious_code.py
+2026-04-10 12:01:44,139 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_16_phishing_links.py
+2026-04-10 12:01:44,148 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_17_source_attribution.py
+2026-04-10 12:01:44,160 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_18_copyright_check.py
+2026-04-10 12:01:44,177 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_19_hallucination.py
+2026-04-10 12:01:44,187 [INFO] GovEnsembleManager: \u2705 Registered Gov Rule: rule_20_tone_consistency.py
+2026-04-10 12:01:44,187 [INFO] MyelinOrchestrator: \u2705 Governance Pillar loaded
+2026-04-10 12:01:44,204 [ERROR] EnsembleManager: Failed to load rule from rule_01_angry_trope.py: No module named 'ollama'
+2026-04-10 12:01:44,210 [INFO] EnsembleManager: Successfully registered: Rule02GenderOccupation
+2026-04-10 12:01:44,212 [INFO] EnsembleManager: Successfully registered: Rule03ReligiousSensitivity
+2026-04-10 12:01:44,215 [ERROR] EnsembleManager: Failed to load rule from rule_04_safety_toxicity_shield.py: No module named 'ollama'
+2026-04-10 12:01:44,215 [INFO] EnsembleManager: Successfully registered: Rule05AgeismDetector
+2026-04-10 12:01:44,219 [INFO] EnsembleManager: Successfully registered: Rule06AbleismDetector
+2026-04-10 12:01:44,220 [INFO] EnsembleManager: Successfully registered: Rule07SocioEconomicBias
+2026-04-10 12:01:44,223 [INFO] EnsembleManager: Successfully registered: Rule08DialectBias
+2026-04-10 12:01:44,223 [INFO] EnsembleManager: Successfully registered: Rule09PoliticalBias
+2026-04-10 12:01:44,223 [INFO] EnsembleManager: Successfully registered: Rule10NationalityBias
+2026-04-10 12:01:44,223 [INFO] EnsembleManager: Successfully registered: Rule11GenderIdentityBias
+2026-04-10 12:01:44,702 [INFO] EnsembleManager: Successfully registered: Rule12TargetedSentiment
+2026-04-10 12:01:44,708 [INFO] EnsembleManager: Successfully registered: Rule13ReligiousProhibition
+2026-04-10 12:01:44,710 [INFO] EnsembleManager: Successfully registered: Rule14PhysicalStereotyping
+2026-04-10 12:01:44,713 [INFO] EnsembleManager: Successfully registered: Rule15EmotionalStereotyping
+2026-04-10 12:01:44,715 [INFO] EnsembleManager: Successfully registered: Rule16IntersectionalBias
+2026-04-10 12:01:44,717 [INFO] EnsembleManager: Successfully registered: Rule17NeurodiversityBias
+2026-04-10 12:01:44,717 [INFO] EnsembleManager: Successfully registered: Rule18BodyImageBias
+2026-04-10 12:01:44,717 [INFO] EnsembleManager: Successfully registered: Rule19HistoricalTraumaBias
+2026-04-10 12:01:44,717 [INFO] EnsembleManager: Successfully registered: Rule20GaslightingBias
+2026-04-10 12:01:44,717 [WARNING] EnsembleManager: CRITICAL: Only 18 rules loaded. Expected 20.
+2026-04-10 12:01:44,724 [INFO] EnsembleManager: Files found in directory: 20
+2026-04-10 12:01:44,724 [INFO] EnsembleManager: Check if class names inside files correctly inherit from BiasRule.
+2026-04-10 12:01:44,724 [INFO] MyelinOrchestrator: \u2705 Bias Pillar loaded
+2026-04-10 12:01:44,724 [INFO] MyelinOrchestrator: \U0001f3af MYELIN orchestrator initialized!
+2026-04-10 12:01:44,724 [INFO] MyelinAgentCore: \U0001f680 Myelin Agent Core Brain Initialized
+INFO:     Started server process [30336]
+INFO:     Waiting for application startup.
+2026-04-10 12:01:44,777 [INFO] MyelinProxyAgent: Starting Myelin Sentinel Agent Proxy v1.1.0
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9000 (Press CTRL+C to quit)
+2026-04-10 12:02:22,135 [INFO] MyelinOrchestrator: Running comprehensive audit...
+2026-04-10 12:02:22,138 [WARNING] OllamaService: Ollama library not installed. Using fallback.
+2026-04-10 12:02:22,149 [INFO] MyelinOrchestrator: Audit complete: ALLOW (risk: LOW)
+2026-04-10 12:02:34,655 [INFO] httpx: HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-10 12:02:34,665 [INFO] MyelinOrchestrator: Running comprehensive audit...
+2026-04-10 12:02:34,665 [WARNING] OllamaService: Ollama library not installed. Using fallback.
+2026-04-10 12:02:34,665 [ERROR] MyelinOrchestrator: Factual audit failed: 'NoneType' object has no attribute 'lower'
+2026-04-10 12:02:34,665 [INFO] MyelinOrchestrator: Audit complete: ALLOW (risk: LOW)
+2026-04-10 12:03:55,427 [INFO] MyelinOrchestrator: Running comprehensive audit...
+2026-04-10 12:03:55,427 [WARNING] OllamaService: Ollama library not installed. Using fallback.
+2026-04-10 12:03:55,427 [INFO] MyelinOrchestrator: Audit complete: ALLOW (risk: LOW)
+2026-04-10 12:04:02,769 [INFO] httpx: HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-04-10 12:04:02,781 [INFO] MyelinOrchestrator: Running comprehensive audit...
+2026-04-10 12:04:02,782 [WARNING] OllamaService: Ollama library not installed. Using fallback.
+2026-04-10 12:04:02,794 [ERROR] MyelinOrchestrator: Factual audit failed: 'NoneType' object has no attribute 'lower'
+2026-04-10 12:04:02,794 [INFO] MyelinOrchestrator: Audit complete: BLOCK (risk: CRITICAL)
+2026-04-10 12:04:02,794 [INFO] MyelinAgentCore: \U0001f6e0 Agent Remediation triggered for decision: BLOCK
+2026-04-10 12:04:02,794 [INFO] MyelinAgentCore: \u26a0\ufe0f Remedying Toxicity Violation
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [30336]

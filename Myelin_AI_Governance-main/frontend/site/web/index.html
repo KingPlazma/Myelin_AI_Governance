@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- ================================================================
+         SECURITY META TAGS
+         ================================================================ -->
+    <!-- Prevent browsers from MIME-sniffing the content type -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+
+    <!-- Referrer policy: only send origin on same-origin requests -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Prevent search engines from indexing the app shell -->
+    <meta name="robots" content="noindex, nofollow" />
+
+    <!-- Content Security Policy:
+         - default: only load from same origin
+         - scripts: same origin only (no inline, no eval)
+         - styles: same origin only
+         - connect: only to Myelin API endpoints
+         - frame-ancestors: nobody can iframe this page
+    -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline';
+        style-src 'self';
+        img-src 'self' data:;
+        font-src 'self';
+        connect-src 'self' http://localhost:8000 https://api.myelin.com;
+        frame-ancestors 'none';
+        base-uri 'self';
+        form-action 'self';
+    " />
+
+    <!-- Permissions Policy: disable unused browser features -->
+    <meta http-equiv="Permissions-Policy"
+          content="camera=(), microphone=(), geolocation=(), payment=()" />
+
+    <title>Myelin – AI Governance &amp; Alignment Auditor</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="css/style.css?v=2" />
+</head>
+
+<body>
+
+    <!-- BACKGROUND -->
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+
+        <div class="shapes">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <!-- PARTICLES -->
+    <canvas id="particles"></canvas>
+
+    <!-- LOGO / NAV -->
+    <div class="logo">
+        <img src="assets/img/logo robo.png" class="robo-icon" alt="robo icon">
+        <span class="logo-text">Myelin</span>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Myelin</h1>
+        <p class="tagline">AI Governance and Alignment Auditor</p>
+
+        <div class="bubble">
+            Myelin is a middleware tool that checks AI-generated content before it is shown to users.
+            It acts as a safety and governance layer, helping teams ensure AI outputs are safe,
+            factually correct, fair, and compliant with policies.
+        </div>
+
+        <div class="buttons">
+            <a href="#api-access" class="btn primary" data-backend-action="scroll-to-api">Get API Access
+                <img src="assets/img/api.png" class="api-icon" alt="API icon">
+            </a>
+            <a href="#features" class="btn secondary" data-backend-action="health-ping">View Features
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="2"
+                        fill="none" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                </svg>
+            </a>
+        </div>
+    </section>
+  <section class="section" id="features">
+    <h2>Core Features</h2>
+
+    <div class="circle-grid">
+        <a href="pages/rules-toxicity.html" class="feature-circle feature-link">
+            <img src="assets/img/core 1.png" class="feature-icon">
+            <span>Toxicity & Safety<br>Verification</span>
+        </a>
+
+        <a href="pages/rules-factual.html" class="feature-circle feature-link">
+            <img src="assets/img/core 2.png" class="feature-icon">
+            <span>Factual<br>Consistency Checking</span>
+        </a>
+
+        <a href="pages/rules-fairness.html" class="feature-circle feature-link">
+            <img src="assets/img/core 3.png" class="feature-icon">
+            <span>Fairness<br>Analysis</span>
+        </a>
+
+        <a href="pages/rules-bias.html" class="feature-circle feature-link">
+            <img src="assets/img/core 4.png" class="feature-icon">
+            <span>Bias<br>Detection</span>
+        </a>
+
+        <a href="pages/rules-governance.html" class="feature-circle feature-link">
+            <img src="assets/img/core 1.png" class="feature-icon">
+            <span>Alignment & Governance<br>Reporting</span>
+        </a>
+    </div>
+
+</section>   <!-- ✅ IMPORTANT -->
+
+        
+
+
+
+    <!-- SLIDER SECTION -->
+    <section class="section alt">
+        <h2>How It Works</h2>
+        
+        <div class="slider-container">
+            <div class="slider">
+                <!-- Slide 1: Agent -->
+                <div class="slide">
+                    <div class="slide-content">
+                        <h3>Agent Integration</h3>
+                        <img src="assets/img/core 1.png" alt="Agent" class="slide-icon">
+                        <p>Deploy Myelin as an autonomous agent that continuously monitors and governs AI outputs in real-time, ensuring compliance across all pipelines.</p>
+                        <a href="pages/agent-integration.html" class="btn primary">Learn More</a>
+                    </div>
+                </div>
+
+                <!-- Slide 2: API -->
+                <div class="slide">
+                    <div class="slide-content">
+                        <h3>API Integration</h3>
+                        <img src="assets/img/core 2.png" alt="API" class="slide-icon">
+                        <p>Integrate directly with your AI systems using our RESTful API. Simple, clean endpoints for governance and compliance checking.</p>
+                        <a href="pages/api-integration.html" class="btn primary">View Documentation</a>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Extension -->
+                <div class="slide">
+                    <div class="slide-content">
+                        <h3>Browser Extension</h3>
+                        <img src="assets/img/core 3.png" alt="Extension" class="slide-icon">
+                        <p>Enhance your browsing experience with real-time AI content verification powered by Myelin's governance layer.</p>
+                        <a href="pages/extension-install.html" class="btn primary">Install Extension</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation buttons -->
+            <button class="slider-btn prev" onclick="moveSlide(-1)">❮</button>
+            <button class="slider-btn next" onclick="moveSlide(1)">❯</button>
+
+            <!-- Dots for slide indication -->
+            <div class="slider-dots">
+                <span class="dot active" onclick="currentSlide(1)"></span>
+                <span class="dot" onclick="currentSlide(2)"></span>
+                <span class="dot" onclick="currentSlide(3)"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- API ACCESS -->
+    <section class="section api-section" id="api-access">
+        <div class="api-card">
+            <h2>API Access</h2>
+            <p class="section-text">
+                Integrate Myelin directly into your AI pipeline using our API.
+                No UI complexity — just clean access points.
+            </p>
+
+            <div class="buttons">
+                <a href="#" class="btn primary" data-backend-action="generate-demo-key">Generate API Key</a>
+                <a href="#" class="btn secondary" data-backend-action="open-docs">View Documentation</a>
+            </div>
+
+            <div class="api-key-inline" id="api-key-inline" aria-live="polite" hidden>
+                <label class="api-key-inline-label" for="generated-api-key-field">Generated API Key</label>
+                <div class="api-key-inline-row">
+                    <input
+                        id="generated-api-key-field"
+                        class="api-key-inline-field"
+                        type="text"
+                        value=""
+                        readonly
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="Generated API Key"
+                    />
+                    <button
+                        id="toggle-api-key-visibility"
+                        class="api-key-inline-icon"
+                        type="button"
+                        title="Show key"
+                        aria-label="Show key"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M12 5C6.5 5 2.2 8.4 1 12c1.2 3.6 5.5 7 11 7s9.8-3.4 11-7c-1.2-3.6-5.5-7-11-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"></path>
+                        </svg>
+                    </button>
+                    <button
+                        id="copy-api-key"
+                        class="api-key-inline-icon"
+                        type="button"
+                        title="Copy key"
+                        aria-label="Copy key"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    </section>   <!-- ✅ API SECTION ENDS HERE -->
+
+<!-- DOWNLOAD EXTENSION -->
+<section class="section download-extension-section">
+    <div class="api-card">
+        <h2>Download Extension</h2>
+        <p class="section-text">
+            Get the Myelin browser extension for real-time AI content verification 
+            while browsing — fast, seamless, and secure.
+        </p>
+
+        <div class="buttons">
+            <a href="pages/extension-install.html" class="btn primary">Download Extension</a>
+            <a href="#" class="btn secondary" data-backend-action="scroll-to-api">API Integration</a>
+        </div>
+    </div>
+</section>
+
+    <!-- PRICING -->
+    <!-- PRICING -->
+    <section class="section alt" id="pricing">
+        <h2>Pricing</h2>
+        <p class="section-text pricing-subtitle">Choose a plan that fits your AI deployment stage.</p>
+
+        <div class="grid pricing-grid">
+
+            <div class="card pricing">
+                <p class="pricing-tag">For Students and Research Labs</p>
+                <h3>Free / Academic</h3>
+                <p class="pricing-price">$0<span>/month</span></p>
+                <ul class="pricing-features">
+                    <li>Up to 5,000 API checks per month</li>
+                    <li>All 5 governance pillars included</li>
+                    <li>Community support and docs access</li>
+                </ul>
+                <a href="#api-access" class="price-btn secondary">Get Started</a>
+            </div>
+
+            <div class="card pricing">
+                <p class="pricing-tag">Most Popular for Product Teams</p>
+                <h3>Pro / Developer</h3>
+                <p class="pricing-price">$49<span>/month</span></p>
+                <ul class="pricing-features">
+                    <li>Up to 100,000 API checks per month</li>
+                    <li>Custom rule builder and audit reports</li>
+                    <li>Priority email support (business hours)</li>
+                </ul>
+                <a href="#contact" class="price-btn">Start Pro Trial</a>
+            </div>
+
+            <div class="card pricing">
+                <p class="pricing-tag">For Regulated and Large Enterprises</p>
+                <h3>Enterprise</h3>
+                <p class="pricing-price">Custom</p>
+                <ul class="pricing-features">
+                    <li>Unlimited API usage and dedicated SLA</li>
+                    <li>SSO, role-based access, private deployment</li>
+                    <li>Compliance dashboards and onboarding support</li>
+                </ul>
+                <a href="#contact" class="price-btn secondary">Contact Sales</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section" id="contact">
+    <h2>Contact Us</h2>
+    <p class="section-text" style="text-align:center; margin-bottom: 2rem;">
+        Have questions or want to learn more? Reach out to our team.
+    </p>
+
+    <div class="contact-container">
+
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2rem;">📧</div>
+            <h3>Email</h3>
+            <p>
+                skshalu198@gmail.com<br>
+                tanyashree.v@gmail.com<br>
+                bhanutejareddy2209@gmail.com<br>
+                sabihaanjum067@gmail.com
+            </p>
+        </div>
+
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2rem;">📞</div>
+            <h3>Phone</h3>
+            <p>
+                +91 63614 63506<br>
+                +91 7624 816 183<br>
+                +91 97388 66949<br>
+                +91 83090 33957
+            </p>
+        </div>
+
+    </div>
+</section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>© 2026 Myelin • AI Governance & Alignment Middleware</p>
+        <p>Documentation • Support • Research Disclaimer</p>
+    </footer>
+
+    <script src="js/script.js?v=9"></script>
+
+    <!-- ================================================================
+         SECURITY: Developer tools / reverse-engineering deterrent
+         ================================================================ -->
+    <script>
+    (function () {
+        'use strict';
+
+        // Disable right-click context menu
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+        });
+
+        // Disable common keyboard shortcuts used for devtools / view-source
+        document.addEventListener('keydown', function (e) {
+            var blocked = (
+                (e.ctrlKey && e.shiftKey && ['I','J','C','U'].includes(e.key)) ||
+                (e.ctrlKey && e.key === 'U') ||
+                e.key === 'F12'
+            );
+            if (blocked) { e.preventDefault(); return false; }
+        });
+
+        // Console warning to deter casual code inspection / paste attacks
+        var _warn = [
+            '%c⚠ STOP!',
+            'color:#ff4444;font-size:40px;font-weight:bold;',
+        ];
+        var _info = [
+            '%cThis is a protected Myelin AI Governance application.\n' +
+            'Pasting code here may compromise your account and is logged.\n' +
+            'If you are a developer, please refer to the official documentation.',
+            'color:#cccccc;font-size:14px;',
+        ];
+        console.log.apply(console, _warn);
+        console.log.apply(console, _info);
+
+        // Detect devtools open (size-change method)
+        var _threshold = 160;
+        var _devtoolsOpen = false;
+        setInterval(function () {
+            var widthDiff  = window.outerWidth  - window.innerWidth  > _threshold;
+            var heightDiff = window.outerHeight - window.innerHeight > _threshold;
+            if ((widthDiff || heightDiff) && !_devtoolsOpen) {
+                _devtoolsOpen = true;
+                // Log to server (fire-and-forget, no user data sent)
+                try {
+                    fetch('/api/v1/health', { method: 'GET', credentials: 'omit' });
+                } catch (_) {}
+            } else if (!(widthDiff || heightDiff)) {
+                _devtoolsOpen = false;
+            }
+        }, 1000);
+    })();
+    </script>
+</body>
+
+</html>
