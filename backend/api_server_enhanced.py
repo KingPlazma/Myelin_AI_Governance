@@ -59,8 +59,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     description="AI Governance and Alignment Auditor with Custom Rules Support",
     version=settings.APP_VERSION,
-    docs_url="/docs" if settings.DEBUG else None,   # hide docs in production
-    redoc_url="/redoc" if settings.DEBUG else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
 # ============================================================================
@@ -239,6 +240,7 @@ async def root():
             "api_keys": f"{settings.API_V1_PREFIX}/api-keys",
             "custom_rules": f"{settings.API_V1_PREFIX}/rules/custom",
             "audit": f"{settings.API_V1_PREFIX}/audit",
+            "health": "/health",
             "docs": "/docs"
         },
         "database_connected": db.is_connected()
