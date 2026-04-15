@@ -19,9 +19,12 @@ def ensure_firebase_credentials_file() -> None:
     if raw_json:
         target_path.write_text(raw_json, encoding="utf-8")
     else:
+        cleaned = "".join(b64_json.split())
+        if len(cleaned) % 4 != 0:
+            cleaned += "=" * (4 - len(cleaned) % 4)
         try:
-            decoded = base64.b64decode(b64_json)
-        except Exception as exc:
+            decoded = base64.b64decode(cleaned)
+        except Exception:
             print("ERROR: FIREBASE_CREDENTIALS_JSON_BASE64 is not valid base64.", file=sys.stderr)
             raise
         target_path.write_bytes(decoded)
