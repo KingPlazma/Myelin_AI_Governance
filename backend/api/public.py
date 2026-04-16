@@ -90,7 +90,10 @@ async def create_demo_api_key(payload: DemoKeyRequest):
 @router.get("/download-extension")
 async def download_extension(background_tasks: BackgroundTasks):
     """Zip the extension folder and serve it as a download."""
-    # Resolve project root relative to this file
+    # Resolve project root relative to this file: backend/api/public.py
+    # dirname 1: backend/api
+    # dirname 2: backend
+    # dirname 3 (current parent): project root
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     extension_path = os.path.join(project_root, "extension")
     
