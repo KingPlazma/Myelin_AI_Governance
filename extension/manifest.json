@@ -34,11 +34,7 @@
         "http://*/*",
         "https://*/*"
       ],
-      "exclude_matches": [
-        "chrome://*/*",
-        "chrome-extension://*/*",
-        "about:*"
-      ],
+      "exclude_matches": [],
       "js": [
         "content.js"
       ],
