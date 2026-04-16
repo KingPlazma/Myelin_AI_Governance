@@ -1,6 +1,6 @@
 // MYELIN API Demo JavaScript
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = window.location.origin;
 
 // Utility function to show loader
 function showLoader(loaderId) {

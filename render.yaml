@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: myelin-ai-governance
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python render_start.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: CLOUDFLARE_ENABLED
+        value: "false"
+      - key: TRUSTED_HOSTS
+        value: "*"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GOOGLE_API_KEY
+        sync: false

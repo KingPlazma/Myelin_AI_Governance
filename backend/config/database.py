@@ -30,14 +30,27 @@ class Database:
         """Initialize Firebase client"""
         try:
             import os, json, base64
+            
+            cred_dict = None
+            json_str = os.getenv("FIREBASE_CREDENTIALS_JSON")
             encoded = os.getenv("FIREBASE_CREDENTIALS_JSON_BASE64")
 
-            if not encoded:
-                logger.warning("Missing FIREBASE_CREDENTIALS_JSON_BASE64. Database features will be disabled.")
+            if json_str:
+                try:
+                    cred_dict = json.loads(json_str)
+                except Exception as e:
+                    logger.error(f"Failed to parse FIREBASE_CREDENTIALS_JSON: {e}")
+            elif encoded:
+                try:
+                    decoded = base64.b64decode(encoded)
+                    cred_dict = json.loads(decoded)
+                except Exception as e:
+                    logger.error(f"Failed to decode or parse FIREBASE_CREDENTIALS_JSON_BASE64: {e}")
+
+            if not cred_dict:
+                logger.warning("No Firebase credentials provided. Database features will be disabled.")
                 return
 
-            decoded = base64.b64decode(encoded)
-            cred_dict = json.loads(decoded)
             cred = credentials.Certificate(cred_dict)
 
             if not firebase_admin._apps:

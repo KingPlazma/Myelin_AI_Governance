@@ -54,7 +54,9 @@
     <div class="card">
         <h3>Configuration</h3>
         <label>API Base URL:</label>
-        <input type="text" id="apiUrl" value="http://localhost:8000" style="width: 300px;">
+        <script>
+            document.write('<input type="text" id="apiUrl" value="' + window.location.origin + '" style="width: 300px;">');
+        </script>
         <button onclick="runTests()">Run Diagnostics</button>
     </div>
 
