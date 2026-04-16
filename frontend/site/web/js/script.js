@@ -133,8 +133,7 @@ function maskApiKey(value) {
 
 async function createDemoApiKey() {
   const payload = {
-    full_name: 'Myelin Web Demo',
-    organization_name: 'Myelin Demo Org'
+    full_name: 'Myelin Web Demo'
   };
 
   try {
