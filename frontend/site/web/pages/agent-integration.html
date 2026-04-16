@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Integration Overview - Myelin</title>
+    <link rel="stylesheet" href="../css/style.css?v=2" />
+    <style>
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            z-index: 20;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .container {
+            max-width: 900px;
+            margin: 120px auto 60px;
+            padding: 40px;
+            background: rgba(19, 25, 35, 0.84);
+            border: 1px solid rgba(132, 155, 186, 0.24);
+            border-radius: 24px;
+            color: white;
+            position: relative;
+            z-index: 5;
+            backdrop-filter: blur(12px);
+        }
+        h1 { font-size: 2.8rem; margin-bottom: 1.5rem; color: #00ffcc; }
+        h2 { font-size: 1.8rem; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(0, 255, 204, 0.3); padding-bottom: 0.5rem; }
+        h3 { font-size: 1.3rem; margin-top: 1.5rem; color: #00ffcc; }
+        p { line-height: 1.7; margin-bottom: 1rem; opacity: 0.9; }
+        ul, ol { margin-bottom: 1.5rem; padding-left: 20px; }
+        li { margin-bottom: 10px; line-height: 1.6; opacity: 0.9; }
+        .feature-box {
+            background: rgba(0, 255, 204, 0.05);
+            border: 1px solid rgba(0, 255, 204, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .offer-section {
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.1), rgba(102, 126, 234, 0.1));
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg">
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+    <canvas id="particles"></canvas>
+
+    <a href="../index.html" class="back-btn">← Back to Home</a>
+
+    <div class="container">
+        <h1>Agent Integration Overview</h1>
+        <p>Agent Integration lets your website connect directly with our AI governance agent so it can monitor, enforce rules, and respond to incidents automatically.</p>
+
+        <div class="feature-box">
+            <ul>
+                <li>Provides real-time governance through a hosted or self-hosted agent</li>
+                <li>Enables continuous monitoring, alerting, and compliance workflows</li>
+                <li>Supports secure communication between your site/backend and the agent</li>
+                <li>Designed for 24/7 operation with enterprise reliability</li>
+            </ul>
+        </div>
+
+        <h2>Agent Integration Steps</h2>
+        
+        <h3>1. Define the integration scope</h3>
+        <ul>
+            <li>Decide which events, actions, or data your website will send to the agent.</li>
+            <li>Identify the governance outcomes you need, such as alerts, policy checks, or remediation.</li>
+        </ul>
+
+        <h3>2. Prepare the endpoint</h3>
+        <ul>
+            <li>Set up the agent endpoint or gateway that your website will call.</li>
+            <li>Ensure it is secured with HTTPS and proper authentication.</li>
+        </ul>
+
+        <h3>3. Implement the connection</h3>
+        <ul>
+            <li>Add code in your backend or frontend integration layer to send requests to the agent.</li>
+            <li>Use structured JSON payloads containing event context, user IDs, timestamps, and metadata.</li>
+        </ul>
+
+        <h3>4. Configure the agent</h3>
+        <ul>
+            <li>Set up rules, policies, and monitoring logic in the agent.</li>
+            <li>Define what should happen on each event: alert, block, log, or escalate.</li>
+        </ul>
+
+        <h3>5. Test the flow</h3>
+        <ul>
+            <li>Validate event submission, response handling, and end-to-end behavior.</li>
+            <li>Test normal flows, failure conditions, and alert generation.</li>
+        </ul>
+
+        <h3>6. Deploy and monitor</h3>
+        <ul>
+            <li>Launch the integration in a staging environment first.</li>
+            <li>Monitor logs, response latency, and agent health before moving to production.</li>
+        </ul>
+
+        <div class="offer-section">
+            <h2>Offer for Developers and Companies</h2>
+            <p>When developers or companies approach us:</p>
+            <ul>
+                <li>We provide a fully configured agent ready to integrate</li>
+                <li>We support deployment so the agent can run 24/7</li>
+                <li>We help connect the agent to your website or backend systems</li>
+                <li>We ensure ongoing monitoring, incident logging, and operational stability</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="../js/script.js"></script>
+</body>
+</html>

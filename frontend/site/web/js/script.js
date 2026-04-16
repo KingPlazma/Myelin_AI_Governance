@@ -147,25 +147,24 @@ async function createDemoApiKey() {
       currentApiKey = data.api_key;
       localStorage.setItem('myelin_api_key', data.api_key);
 
-      if (!demoApiKeyCopied) {
-        try {
-          await navigator.clipboard.writeText(data.api_key);
-          demoApiKeyCopied = true;
-          sessionStorage.setItem('myelin_demo_key_copied', 'true');
-        } catch (_error) {
-          // Clipboard is optional; key is still stored locally.
-        }
+      // Display the key on the page
+      const container = document.getElementById('key-display-container');
+      const valueEl = document.getElementById('api-key-value');
+      if (container && valueEl) {
+        valueEl.textContent = data.api_key;
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
-      showToast(`API key created: ${data.api_key}`, 'success');
+      showToast(`API key created and shown below.`, 'success');
       return;
     }
 
     showToast('Backend responded, but no API key was returned.', 'error');
   } catch (error) {
     if (String(error.message || '').includes('disabled')) {
-      showToast('Demo API key is disabled on the backend. Use the auth/register flow instead.', 'error');
-      window.open(`${BACKEND_BASE_URL}/`, '_blank', 'noopener,noreferrer');
+      showToast('Demo API key is disabled on the backend. Please check your Render Environment Variables.', 'error');
+      // Removed window.open to prevent unexpected tab pops
       return;
     }
 
