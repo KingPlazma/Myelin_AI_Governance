@@ -171,9 +171,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "camera=(), microphone=(), geolocation=(), payment=()"
         )
 
-        # --- Strict CSP for a pure API (no HTML rendering) ---
+        # --- Relaxed CSP to allow the mounted frontend to load ---
+        # Note: The frontend HTML also has its own meta-tag CSP.
+        # We allow 'self' for assets and 'unsafe-inline' for scripts to support the demo.
         response.headers["Content-Security-Policy"] = (
-            "default-src 'none'; frame-ancestors 'none'"
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self' data:; "
+            "connect-src 'self' *; "
+            "frame-ancestors 'none'"
         )
 
         # --- HSTS: instruct browsers to always use HTTPS ---
